@@ -253,6 +253,9 @@ fi
 
 systemctl enable sddm.service NetworkManager.service bluetooth.service
 systemctl enable power-profiles-daemon.service 2>/dev/null || true
+# Résolution des noms (DNS) : l'installation peut laisser /etc/resolv.conf pointer vers
+# systemd-resolved ; on l'active pour que le DNS marche dans tous les cas
+systemctl enable systemd-resolved.service
 
 # ────────────────────────────────────────────────────────────────
 etape "Menu de démarrage (dual boot Windows)"

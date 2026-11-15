@@ -233,6 +233,10 @@ trap 'rm -rf "$ANCIEN"' EXIT
 [[ -d "$PS/skel" ]] && cp -a "$PS/skel/." "$ANCIEN/"
 
 maj_systeme
+if [[ -f "$PS/correctifs.sh" && -z "$RACINE" ]]; then
+    etape "Correctifs système"
+    $SUDO bash "$PS/correctifs.sh" || alerte "un correctif a échoué"
+fi
 [[ -z "${PINKSHEEP_SANS_PAQUETS:-}" ]] && maj_paquets
 maj_configs "$ANCIEN"
 regenerer
