@@ -1,0 +1,31 @@
+/* Notifications PinkSheep — couleurs : couleurs.css (généré depuis le fond d'écran) */
+@import "couleurs.css";
+
+* { font-family: "JetBrainsMono Nerd Font", "Noto Sans", sans-serif; }
+
+.notification-row { outline: none; }
+
+.notification {
+    background: alpha(@fond, 0.92);
+    border: 2px solid alpha(@primaire, 0.6);
+    border-radius: 14px;
+    color: @texte;
+    padding: 6px;
+}
+.notification .summary { color: @primaire; font-weight: bold; }
+.notification .body    { color: @texte; }
+.notification.critical { border-color: @erreur; }
+
+.control-center {
+    background: alpha(@fond, 0.9);
+    border: 2px solid alpha(@primaire, 0.5);
+    border-radius: 16px;
+    color: @texte;
+}
+.control-center .widget-title { color: @primaire; font-size: 1.2rem; }
+.control-center .widget-title > button {
+    background: @surface_haute; color: @primaire; border-radius: 10px; border: none;
+}
+.widget-dnd > switch { background: @surface_haute; border-radius: 12px; }
+.widget-dnd > switch:checked { background: @primaire; }
+.close-button { background: @surface_haute; color: @primaire; border-radius: 50%; }

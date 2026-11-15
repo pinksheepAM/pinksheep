@@ -1,0 +1,141 @@
+# Paquets PinkSheep
+# Format :  catégorie  paquet
+#   essentiel  → doit s'installer, sinon l'installation s'arrête
+#   bonus      → installé si disponible, ignoré sinon (pas bloquant)
+# Pour ajouter une appli à ta distro, ajoute une ligne « bonus nom-du-paquet ».
+
+# ── Bureau Hyprland ─────────────────────────────
+essentiel hyprland
+essentiel xdg-desktop-portal-hyprland
+essentiel xdg-desktop-portal-gtk
+essentiel awww
+essentiel matugen
+essentiel imagemagick
+essentiel hyprlock
+essentiel hypridle
+essentiel waybar
+essentiel rofi
+essentiel kitty
+bonus     foot
+essentiel sddm
+essentiel qt6-wayland
+essentiel qt5-wayland
+bonus     hyprpolkitagent
+bonus     hyprpicker
+bonus     hyprshutdown
+bonus     swaync
+bonus     wlogout
+
+# ── Système ─────────────────────────────────────
+essentiel networkmanager
+essentiel network-manager-applet
+essentiel pipewire
+essentiel pipewire-pulse
+essentiel pipewire-alsa
+essentiel wireplumber
+essentiel bluez
+essentiel bluez-utils
+essentiel polkit
+essentiel sudo
+essentiel jq
+essentiel libnotify
+essentiel wl-clipboard
+essentiel grim
+essentiel slurp
+essentiel brightnessctl
+essentiel playerctl
+essentiel xdg-user-dirs
+essentiel xdg-utils
+bonus     pipewire-jack
+bonus     blueman
+bonus     pavucontrol
+bonus     cliphist
+bonus     satty
+bonus     gvfs
+bonus     udisks2
+bonus     gnome-keyring
+bonus     power-profiles-daemon
+bonus     man-db
+essentiel git
+bonus     github-cli
+bonus     unzip
+essentiel python
+bonus     base-devel
+bonus     unzip
+bonus     p7zip
+bonus     less
+
+# ── Polices, icônes, thèmes ─────────────────────
+essentiel noto-fonts
+essentiel noto-fonts-emoji
+bonus     noto-fonts-cjk
+bonus     ttf-jetbrains-mono-nerd
+bonus     papirus-icon-theme
+bonus     breeze
+bonus     breeze-gtk
+bonus     qt6ct
+bonus     nwg-look
+bonus     adw-gtk-theme
+
+# ── Terminal stylé (comme dans les vidéos de « rice ») ─
+essentiel zsh
+bonus     zsh-autosuggestions
+bonus     zsh-syntax-highlighting
+bonus     zsh-completions
+bonus     starship
+bonus     fzf
+bonus     zoxide
+bonus     eza
+bonus     bat
+bonus     fd
+bonus     ripgrep
+bonus     yazi
+bonus     ffmpeg
+bonus     poppler
+bonus     chafa
+bonus     neovim
+
+# ── Musique & vidéo dans le terminal ────────────
+bonus     mpd
+bonus     mpc
+bonus     rmpc
+bonus     cava
+bonus     yt-dlp
+bonus     python-mutagen
+
+# ── Pour le style Hyprlust (pinksheep-hyprlust) ──
+bonus     pamixer
+bonus     python-requests
+bonus     python-pyquery
+bonus     ttf-iosevka-nerd
+bonus     ttf-firacode-nerd
+bonus     zathura
+bonus     zathura-pdf-mupdf
+bonus     swappy
+bonus     newsboat
+
+# ── Applis du quotidien ─────────────────────────
+essentiel dolphin
+essentiel firefox
+bonus     firefox-i18n-fr
+bonus     archlinux-xdg-menu
+bonus     ark
+bonus     gwenview
+bonus     okular
+bonus     kate
+bonus     mpv
+bonus     fastfetch
+bonus     btop
+bonus     libreoffice-fresh
+bonus     libreoffice-fresh-fr
+
+# ── Jeux & création ─────────────────────────────
+# (les pilotes graphiques 32 bits sont installés avant, voir setup.sh)
+bonus     steam
+bonus     gamemode
+bonus     lib32-gamemode
+bonus     mangohud
+bonus     lib32-mangohud
+bonus     discord
+bonus     obs-studio
+bonus     flatpak

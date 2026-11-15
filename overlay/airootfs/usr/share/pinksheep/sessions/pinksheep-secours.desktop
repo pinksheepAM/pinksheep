@@ -1,0 +1,6 @@
+[Desktop Entry]
+Name=Hyprland (secours, sans accélération graphique)
+Comment=Rendu logiciel : lent mais marche partout. Pour dépanner un écran noir.
+Exec=/usr/local/bin/pinksheep-session-secours
+Type=Application
+DesktopNames=Hyprland

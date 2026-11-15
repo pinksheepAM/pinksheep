@@ -1,0 +1,5 @@
+# Fichiers produits par build.sh
+_construction/
+iso/
+*.iso
+*.sha256

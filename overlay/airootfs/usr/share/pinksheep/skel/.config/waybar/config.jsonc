@@ -1,0 +1,105 @@
+// Barre PinkSheep — doc : https://github.com/Alexays/Waybar/wiki
+{
+    "layer": "top",
+    "position": "top",
+    "height": 36,
+    "margin-top": 6,
+    "margin-left": 12,
+    "margin-right": 12,
+    "spacing": 6,
+
+    "modules-left":   ["custom/logo", "hyprland/workspaces", "hyprland/window"],
+    "modules-center": ["clock"],
+    "modules-right":  ["tray", "pulseaudio", "network", "cpu", "memory", "custom/fond", "custom/notifications", "custom/power"],
+
+    "custom/logo": {
+        "format": "🐑",
+        "tooltip-format": "Applications (SUPER + Espace)\nClic droit : aide des raccourcis",
+        "on-click": "rofi -show drun",
+        "on-click-right": "pinksheep-aide"
+    },
+
+    "hyprland/workspaces": {
+        "format": "{id}",
+        "on-scroll-up": "hyprctl dispatch 'hl.dsp.focus({ workspace = \"e-1\" })'",
+        "on-scroll-down": "hyprctl dispatch 'hl.dsp.focus({ workspace = \"e+1\" })'",
+        "persistent-workspaces": { "*": 5 }
+    },
+
+    "hyprland/window": {
+        "format": "{title}",
+        "max-length": 50,
+        "separate-outputs": true
+    },
+
+    "clock": {
+        "format": "{:%H:%M}",
+        "format-alt": "{:%A %d %B %Y}",
+        "locale": "fr_FR.UTF-8",
+        "tooltip-format": "<tt><small>{calendar}</small></tt>",
+        "calendar": {
+            "mode": "month",
+            "format": {
+                "months":   "<span color='#ffb3d1'><b>{}</b></span>",
+                "weekdays": "<span color='#c8a2ff'><b>{}</b></span>",
+                "today":    "<span color='#ff7eb6'><b><u>{}</u></b></span>"
+            }
+        }
+    },
+
+    "tray": { "icon-size": 16, "spacing": 8 },
+
+    "pulseaudio": {
+        "format": "{icon} {volume}%",
+        "format-muted": "󰝟 muet",
+        "format-icons": { "headphone": "󰋋", "default": ["󰕿", "󰖀", "󰕾"] },
+        "on-click": "pavucontrol",
+        "on-click-right": "wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle",
+        "scroll-step": 5
+    },
+
+    "network": {
+        "format-wifi": "󰖩 {essid}",
+        "format-ethernet": "󰈀 filaire",
+        "format-disconnected": "󰖪 hors ligne",
+        "tooltip-format": "{ifname} — {ipaddr}",
+        "on-click": "nm-connection-editor"
+    },
+
+    "cpu":    { "format": "󰻠 {usage}%", "interval": 3, "on-click": "pinksheep-terminal --class pinksheep-btop btop" },
+    "memory": { "format": "󰍛 {percentage}%", "interval": 5, "tooltip-format": "{used:0.1f} Go / {total:0.1f} Go" },
+
+    "custom/notifications": {
+        "format": "{icon}",
+        "format-icons": {
+            "notification": "󰂚<span foreground='#ff7eb6'><sup>●</sup></span>",
+            "none": "󰂚",
+            "dnd-notification": "󰂛<span foreground='#ff7eb6'><sup>●</sup></span>",
+            "dnd-none": "󰂛",
+            "inhibited-notification": "󰂚",
+            "inhibited-none": "󰂚",
+            "dnd-inhibited-notification": "󰂛",
+            "dnd-inhibited-none": "󰂛"
+        },
+        "return-type": "json",
+        "exec": "swaync-client -swb",
+        "exec-if": "which swaync-client",
+        "on-click": "swaync-client -t -sw",
+        "on-click-right": "swaync-client -d -sw",
+        "escape": true,
+        "tooltip": false
+    },
+
+    "custom/fond": {
+        "format": "󰏘",
+        "tooltip-format": "Changer de fond d'écran et de couleurs (SUPER + W)\nClic droit : au hasard",
+        "on-click": "pinksheep-fond --choisir",
+        "on-click-right": "pinksheep-fond --aleatoire"
+    },
+
+    "custom/power": {
+        "format": "⏻",
+        "tooltip-format": "Éteindre / redémarrer (SUPER + Échap)",
+        "on-click": "pinksheep-power"
+    }
+}

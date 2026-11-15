@@ -1,0 +1,4 @@
+# Paquets ajoutés au système live (en plus de ceux de l'ISO Arch officielle)
+terminus-font
+pciutils
+curl

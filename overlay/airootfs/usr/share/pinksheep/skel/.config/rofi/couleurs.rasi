@@ -1,0 +1,10 @@
+/* Généré automatiquement par matugen à partir du fond d'écran */
+* {
+    fond:       #191119e6;
+    surface:    #312730;
+    primaire:   #f9acff;
+    surprim:    #570066;
+    tertiaire:  #f8b3d0;
+    texte:      #eedeeb;
+    discret:    #d2c2ce;
+}

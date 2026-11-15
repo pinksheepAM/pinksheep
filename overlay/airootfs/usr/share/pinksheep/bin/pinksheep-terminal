@@ -1,0 +1,38 @@
+#!/usr/bin/env bash
+# ╭──────────────────────────────────────────────────────────────╮
+# │  PinkSheep — ouvre un terminal, quoi qu'il arrive             │
+# │  Usage : pinksheep-terminal [--class NOM] [commande …]        │
+# │                                                              │
+# │  1. Kitty (le terminal principal)                             │
+# │     - en machine virtuelle / session de secours : rendu       │
+# │       logiciel, car Kitty exige OpenGL 3.3                    │
+# │  2. Si Kitty s'arrête aussitôt (pas d'OpenGL…) : foot,        │
+# │     qui n'a pas besoin de la carte graphique                  │
+# ╰──────────────────────────────────────────────────────────────╯
+classe=""
+if [[ "${1:-}" == "--class" && -n "${2:-}" ]]; then
+    classe="$2"; shift 2
+fi
+
+gpu="$(cat /etc/pinksheep/gpu 2>/dev/null)"
+if [[ "$gpu" == vm || "${PINKSHEEP_SECOURS:-}" == 1 ]]; then
+    export LIBGL_ALWAYS_SOFTWARE=1
+fi
+
+lancer_foot() {
+    command -v foot >/dev/null 2>&1 || return 1
+    if [[ -n "$classe" ]]; then exec foot --app-id="$classe" "$@"; else exec foot "$@"; fi
+}
+
+if command -v kitty >/dev/null 2>&1; then
+    debut=$SECONDS
+    if [[ -n "$classe" ]]; then kitty --class "$classe" "$@"; else kitty "$@"; fi
+    code=$?
+    # Kitty a quitté en erreur en moins de 3 s : il n'a sûrement pas pu démarrer
+    if [[ $code -ne 0 && $((SECONDS - debut)) -lt 3 ]]; then
+        notify-send -a PinkSheep -u low "Terminal" "Kitty n'a pas pu démarrer, ouverture de foot." 2>/dev/null
+        lancer_foot "$@"
+    fi
+    exit "$code"
+fi
+lancer_foot "$@" || notify-send -a PinkSheep -u critical "Terminal" "Aucun terminal disponible (kitty, foot)."

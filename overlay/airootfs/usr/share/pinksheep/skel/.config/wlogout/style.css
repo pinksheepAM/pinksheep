@@ -1,0 +1,36 @@
+/* Menu d'extinction PinkSheep — couleurs : couleurs.css (généré depuis le fond d'écran) */
+@import "couleurs.css";
+
+* {
+    font-family: "JetBrainsMono Nerd Font", "Noto Sans", sans-serif;
+    background-image: none;
+    box-shadow: none;
+}
+
+window {
+    background-color: alpha(@fond, 0.55);
+}
+
+button {
+    color: @texte;
+    background-color: alpha(@surface, 0.85);
+    border: 2px solid alpha(@primaire, 0.25);
+    border-radius: 24px;
+    margin: 12px;
+    font-size: 18px;
+    background-repeat: no-repeat;
+    background-position: center 38%;
+    background-size: 22%;
+}
+
+button:focus, button:hover {
+    color: @sur_primaire;
+    background-color: @primaire;
+    border-color: @primaire;
+}
+
+#lock     { background-image: image(url("/usr/share/wlogout/icons/lock.png")); }
+#logout   { background-image: image(url("/usr/share/wlogout/icons/logout.png")); }
+#suspend  { background-image: image(url("/usr/share/wlogout/icons/suspend.png")); }
+#reboot   { background-image: image(url("/usr/share/wlogout/icons/reboot.png")); }
+#shutdown { background-image: image(url("/usr/share/wlogout/icons/shutdown.png")); }

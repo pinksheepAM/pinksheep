@@ -1,0 +1,22 @@
+{
+    "logo": {
+        "source": "/usr/share/pinksheep/branding/logo.txt",
+        "color": { "1": "magenta", "2": "white", "3": "black" },
+        "padding": { "right": 3 }
+    },
+    "display": { "color": { "keys": "magenta" }, "separator": "  " },
+    "modules": [
+        { "type": "title", "format": "{user-name}@{host-name}" },
+        "separator",
+        { "type": "os", "key": "󰧱 Système", "format": "PinkSheep (base Arch Linux)" },
+        { "type": "kernel", "key": "󰻀 Noyau" },
+        { "type": "wm", "key": "󰍹 Bureau" },
+        { "type": "cpu", "key": "󰘚 Processeur", "format": "{name}" },
+        { "type": "gpu", "key": "󰢮 Carte graphique", "format": "{name}" },
+        { "type": "memory", "key": "󰍛 Mémoire" },
+        { "type": "disk", "key": "󰋊 Disque", "folders": "/" },
+        { "type": "uptime", "key": "󰅐 Allumé depuis" },
+        "break",
+        "colors"
+    ]
+}

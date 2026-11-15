@@ -1,0 +1,12 @@
+/* Lanceur PinkSheep */
+configuration {
+    modi: "drun,run,window";
+    show-icons: true;
+    icon-theme: "Papirus-Dark";
+    display-drun: "󰀻  Applis";
+    display-run: "󰆍  Commandes";
+    display-window: "󰲋  Fenêtres";
+    drun-display-format: "{name}";
+    font: "JetBrainsMono Nerd Font 12";
+}
+@theme "pinksheep"

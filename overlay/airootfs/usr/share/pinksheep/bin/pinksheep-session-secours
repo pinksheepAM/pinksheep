@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+# PinkSheep — session de secours : Hyprland en rendu logiciel.
+# À choisir sur l'écran de connexion si le bureau normal reste noir
+# (machine virtuelle sans 3D, pilote graphique cassé après une mise à jour…).
+export MESA_LOADER_DRIVER_OVERRIDE=kms_swrast
+export LIBGL_ALWAYS_SOFTWARE=1
+export PINKSHEEP_SECOURS=1          # hyprland.lua coupe alors flou et animations
+if command -v start-hyprland >/dev/null 2>&1; then
+    exec start-hyprland
+else
+    exec Hyprland
+fi

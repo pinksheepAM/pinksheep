@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+# PinkSheep — message de bienvenue, uniquement au tout premier lancement.
+etat="${XDG_STATE_HOME:-$HOME/.local/state}/pinksheep"
+[[ -e "$etat/bienvenue-faite" ]] && exit 0
+mkdir -p "$etat"
+touch "$etat/bienvenue-faite"
+
+sleep 3
+notify-send -a PinkSheep -u normal "Bienvenue sur PinkSheep 🐑" \
+"SUPER + H : tous les raccourcis
+SUPER + W : changer de fond (les couleurs suivent !)
+SUPER + Espace : lancer une appli
+SUPER + Entrée : terminal"
+pinksheep-aide

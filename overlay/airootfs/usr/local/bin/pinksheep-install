@@ -1,0 +1,153 @@
+#!/usr/bin/env bash
+# ╭──────────────────────────────────────────────────────────────╮
+# │  PinkSheep — installeur (à lancer depuis la clé USB live)      │
+# │                                                              │
+# │  1. archinstall installe une Arch de base (disque, compte…)   │
+# │  2. setup.sh transforme cette base en PinkSheep                │
+# │                                                              │
+# │  pinksheep-install              installation complète          │
+# │  pinksheep-install --etape2     relance seulement l'étape 2    │
+# │                                (système déjà monté sur /mnt)  │
+# ╰──────────────────────────────────────────────────────────────╯
+set -uo pipefail
+
+CIBLE=/mnt
+SOURCE=/usr/share/pinksheep
+ROSE=$'\e[38;2;255;126;182m'; LAV=$'\e[38;2;200;162;255m'; GRIS=$'\e[38;2;165;143;168m'
+ROUGE=$'\e[1;31m'; GRAS=$'\e[1m'; RAZ=$'\e[0m'
+
+titre() {
+    clear
+    printf '%s' "$ROSE"
+    cat <<'EOF'
+
+      ▄▄▄ ▄▄▄ ▄▄▄        ____  _       _     ____  _
+    ▄█████████████▄     |  _ \(_)_ __ | | __/ ___|| |__   ___  ___ _ __
+  ▐█o▄█████████████▌    | |_) | | '_ \| |/ /\___ \| '_ \ / _ \/ _ \ '_ \
+   ▀▀ ▀███████████▀     |  __/| | | | |   <  ___) | | | |  __/  __/ |_) |
+       █ █   █ █        |_|   |_|_| |_|_|\_\|____/|_| |_|\___|\___| .__/
+                                                                  |_|
+EOF
+    printf '%s\n' "$RAZ"
+}
+
+pause() { read -rp "$(printf '%s   Appuie sur Entrée pour continuer…%s' "$GRIS" "$RAZ")" _; }
+erreur() { printf '\n%s[X] %s%s\n\n' "$ROUGE" "$*" "$RAZ"; exit 1; }
+
+[[ $EUID -eq 0 ]] || erreur "Lance ce script en root."
+
+verifier_internet() {
+    printf '%sVérification de la connexion internet…%s\n' "$ROSE" "$RAZ"
+    until curl -fsS --max-time 8 -o /dev/null https://archlinux.org; do
+        printf '\n%sPas de connexion internet.%s\n' "$ROUGE" "$RAZ"
+        cat <<EOF
+   • Câble Ethernet : branche-le, ça marche tout seul.
+   • Wi-Fi : tape  ${GRAS}iwctl${RAZ}  puis :
+        station wlan0 scan
+        station wlan0 get-networks
+        station wlan0 connect "NomDuWifi"
+        exit
+EOF
+        read -rp "Entrée pour réessayer (ou Ctrl+C pour quitter)… " _
+    done
+    printf '%s   -> connecté [ok]%s\n\n' "$LAV" "$RAZ"
+}
+
+conseils_archinstall() {
+    titre
+    printf '%s%s!! LIS CA AVANT DE CONTINUER !!%s\n\n' "$ROUGE" "$GRAS" "$RAZ"
+    cat <<EOF
+  L'installeur officiel d'Arch (${GRAS}archinstall${RAZ}) va s'ouvrir. Choisis :
+
+  ${ROSE}Langue de l'installeur${RAZ}   Français (si proposé)
+  ${ROSE}Locales${RAZ}                  clavier ${GRAS}fr${RAZ}, langue ${GRAS}fr_FR.UTF-8${RAZ}
+  ${ROSE}Disques${RAZ}                  ${ROUGE}${GRAS}ATTENTION :${RAZ} le disque choisi peut être ${ROUGE}EFFACÉ${RAZ}.
+                           Garde Windows -> installe PinkSheep sur un ${GRAS}autre disque${RAZ},
+                           ou sur de l'espace libre préparé depuis Windows
+                           (Gestion des disques -> Réduire le volume).
+                           Débranche les disques que tu ne veux pas toucher.
+  ${ROSE}Chargeur de démarrage${RAZ}    ${GRAS}GRUB${RAZ} (pour pouvoir choisir Windows au démarrage)
+  ${ROSE}Swap${RAZ}                     oui (zram)
+  ${ROSE}Nom de la machine${RAZ}        ce que tu veux (ex. pinksheep)
+  ${ROSE}Authentification${RAZ}         crée TON compte, coche ${GRAS}Superuser / sudo${RAZ}
+  ${ROSE}Profil${RAZ}                   ${GRAS}Minimal${RAZ}  (PinkSheep installe le bureau après)
+  ${ROSE}Audio${RAZ}                    ${GRAS}Pipewire${RAZ}
+  ${ROSE}Noyau${RAZ}                    ${GRAS}linux${RAZ}
+  ${ROSE}Réseau${RAZ}                   ${GRAS}NetworkManager${RAZ}
+  ${ROSE}Fuseau horaire${RAZ}           Europe/Paris
+
+  ${ROUGE}${GRAS}À la toute fin, quand archinstall demande quoi faire :
+  choisis "Exit archinstall" / "Quitter" — PAS "Reboot".${RAZ}
+  PinkSheep a besoin de finir son installation juste après.
+
+EOF
+    pause
+}
+
+etape2() {
+    if ! mountpoint -q "$CIBLE" || [[ ! -f "$CIBLE/etc/arch-release" ]]; then
+        cat <<EOF
+
+${ROUGE}Le système installé n'est pas monté sur $CIBLE.${RAZ}
+Si tu as redémarré par erreur, ce n'est pas grave :
+  1. Repère la partition de ton système :   ${GRAS}lsblk -f${RAZ}
+  2. Monte-la (btrfs créé par archinstall) :
+        ${GRAS}mount -o subvol=@ /dev/TA_PARTITION $CIBLE${RAZ}
+        ${GRAS}mount /dev/TA_PARTITION_EFI $CIBLE/boot${RAZ}
+  3. Relance :                               ${GRAS}pinksheep-install --etape2${RAZ}
+
+EOF
+        exit 1
+    fi
+
+    titre
+    printf '%sÉtape 2/2 : transformation en PinkSheep%s\n' "$ROSE" "$RAZ"
+    printf '%s   (10 à 30 min selon ta connexion — environ 3 Go à télécharger)%s\n\n' "$GRIS" "$RAZ"
+
+    cat <<EOF
+  ${ROSE}Quel style veux-tu ?${RAZ}
+    1) PinkSheep  (par défaut : barre et lanceur PinkSheep)
+    2) Hyprlust   (les configs de github.com/NischalDawadi/Hyprlust,
+                   adaptées à PinkSheep ; réversible plus tard)
+  Dans les deux cas, les couleurs suivent le fond d'écran (SUPER + W).
+
+EOF
+    read -rp "  Ton choix [1/2] : " choix_style
+    STYLE=pinksheep
+    [[ "$choix_style" == 2 ]] && STYLE=hyprlust
+    printf '\n'
+
+    rm -rf "$CIBLE$SOURCE"
+    mkdir -p "$CIBLE$SOURCE"
+    cp -rT "$SOURCE" "$CIBLE$SOURCE"
+
+    if arch-chroot "$CIBLE" env PINKSHEEP_STYLE="$STYLE" bash "$SOURCE/setup.sh"; then
+        printf '\n%s%sInstallation terminée !%s\n' "$ROSE" "$GRAS" "$RAZ"
+        printf "   Retire la clé USB quand l'écran s'éteint.\n\n"
+        read -rp "Redémarrer maintenant ? [O/n] " rep
+        if [[ ! "$rep" =~ ^[nN] ]]; then
+            umount -R "$CIBLE" 2>/dev/null
+            reboot
+        fi
+    else
+        erreur "L'étape 2 a échoué. Journal : $CIBLE/var/log/pinksheep-setup.log — tu peux relancer : pinksheep-install --etape2"
+    fi
+}
+
+if [[ "${1:-}" == "--etape2" ]]; then
+    verifier_internet
+    etape2
+    exit
+fi
+
+titre
+printf "  %sBienvenue dans l'installeur PinkSheep%s\n\n" "$GRAS" "$RAZ"
+printf '  %sBase Arch Linux · bureau Hyprland · thème rose · pilotes auto%s\n\n' "$GRIS" "$RAZ"
+verifier_internet
+conseils_archinstall
+
+titre
+printf '%sÉtape 1/2 : installation de la base Arch (archinstall)%s\n\n' "$ROSE" "$RAZ"
+archinstall || true
+
+etape2

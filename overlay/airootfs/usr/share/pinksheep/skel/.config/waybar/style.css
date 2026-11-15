@@ -1,0 +1,75 @@
+/* Barre PinkSheep — couleurs : couleurs.css (généré depuis le fond d'écran) */
+@import "couleurs.css";
+
+* {
+    font-family: "JetBrainsMono Nerd Font", "Noto Sans", sans-serif;
+    font-size: 13px;
+    border: none;
+    border-radius: 0;
+    min-height: 0;
+}
+
+window#waybar {
+    background: @fond_alpha;
+    border: 2px solid alpha(@primaire, 0.35);
+    border-radius: 14px;
+    color: @texte;
+}
+
+tooltip {
+    background: @surface_haute;
+    border: 1px solid @primaire;
+    border-radius: 10px;
+    color: @texte;
+}
+
+#custom-logo {
+    color: @primaire;
+    font-size: 18px;
+    padding: 0 12px 0 14px;
+}
+
+#workspaces button {
+    color: @discret;
+    padding: 0 8px;
+    margin: 5px 2px;
+    border-radius: 9px;
+    background: transparent;
+}
+#workspaces button.active {
+    color: @sur_primaire;
+    background: linear-gradient(90deg, @primaire, @tertiaire);
+}
+#workspaces button.urgent { color: @sur_primaire; background: @erreur; }
+#workspaces button:hover  { background: alpha(@primaire, 0.2); color: @primaire; }
+
+#window { color: @discret; padding: 0 10px; }
+
+#clock {
+    color: @primaire;
+    font-weight: bold;
+    padding: 0 14px;
+}
+
+#tray, #pulseaudio, #network, #cpu, #memory, #custom-fond, #custom-notifications {
+    padding: 0 10px;
+    margin: 5px 0;
+    border-radius: 9px;
+    background: alpha(@surface, 0.85);
+}
+
+#pulseaudio { color: @primaire; }
+#pulseaudio.muted { color: @discret; }
+#network { color: @tertiaire; }
+#network.disconnected { color: @discret; }
+#cpu { color: @primaire; }
+#memory { color: @secondaire; }
+#custom-notifications { color: @texte; }
+#custom-fond { color: @tertiaire; }
+
+#custom-power {
+    color: @primaire;
+    padding: 0 14px 0 10px;
+    font-size: 15px;
+}
+#custom-power:hover { color: @primaire; }

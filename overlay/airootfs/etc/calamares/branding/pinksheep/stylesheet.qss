@@ -1,0 +1,122 @@
+/* ╭──────────────────────────────────────────────────────────╮
+   │  PinkSheep — installeur en mode sombre (Calamares)       │
+   │  Prune #1a1220 · surface #2a1d33 · rose #ff7eb6          │
+   ╰──────────────────────────────────────────────────────────╯ */
+
+/* Fond et texte de toute la fenêtre */
+QWidget {
+    background-color: #1a1220;
+    color: #f5e6ef;
+    selection-background-color: #ff7eb6;
+    selection-color: #1a1220;
+}
+
+QLabel { background: transparent; }
+
+/* Champs de saisie */
+QLineEdit, QSpinBox, QPlainTextEdit, QTextEdit, QTextBrowser {
+    background-color: #2a1d33;
+    color: #f5e6ef;
+    border: 1px solid #4a3a50;
+    border-radius: 8px;
+    padding: 5px 8px;
+}
+QLineEdit:focus, QSpinBox:focus { border: 1px solid #ff7eb6; }
+
+/* Menus déroulants */
+QComboBox {
+    background-color: #2a1d33;
+    color: #f5e6ef;
+    border: 1px solid #4a3a50;
+    border-radius: 8px;
+    padding: 5px 10px;
+}
+QComboBox:hover, QComboBox:focus { border: 1px solid #ff7eb6; }
+QComboBox QAbstractItemView {
+    background-color: #2a1d33;
+    color: #f5e6ef;
+    border: 1px solid #ff7eb6;
+    selection-background-color: #ff7eb6;
+    selection-color: #1a1220;
+}
+
+/* Listes et tableaux (langues, fuseaux, claviers, partitions) */
+QListView, QTreeView, QTableView, QListWidget, QTreeWidget {
+    background-color: #21172a;
+    alternate-background-color: #2a1d33;
+    color: #f5e6ef;
+    border: 1px solid #4a3a50;
+    border-radius: 8px;
+}
+QListView::item:selected, QTreeView::item:selected, QTableView::item:selected,
+QListWidget::item:selected, QTreeWidget::item:selected {
+    background-color: #ff7eb6;
+    color: #1a1220;
+}
+QListView::item:hover, QTreeView::item:hover { background-color: #3a2645; }
+QHeaderView::section {
+    background-color: #2a1d33;
+    color: #ffb3d1;
+    border: none;
+    padding: 4px 8px;
+}
+
+/* Boutons */
+QPushButton, QToolButton {
+    background-color: #2a1d33;
+    color: #f5e6ef;
+    border: 1px solid #ff7eb6;
+    border-radius: 8px;
+    padding: 6px 16px;
+}
+QPushButton:hover, QToolButton:hover     { background-color: #3a2645; }
+QPushButton:pressed, QToolButton:pressed { background-color: #ff7eb6; color: #1a1220; }
+QPushButton:disabled, QToolButton:disabled { color: #7d6a80; border-color: #4a3a50; }
+
+/* Cases à cocher et choix (Effacer le disque / Installer à côté…) */
+QCheckBox, QRadioButton { background: transparent; spacing: 8px; }
+QCheckBox::indicator, QRadioButton::indicator {
+    width: 16px; height: 16px;
+    border: 2px solid #a58fa8;
+    background-color: #2a1d33;
+}
+QCheckBox::indicator { border-radius: 4px; }
+QRadioButton::indicator { border-radius: 9px; }
+QCheckBox::indicator:checked, QRadioButton::indicator:checked {
+    background-color: #ff7eb6;
+    border-color: #ff7eb6;
+}
+
+QGroupBox {
+    border: 1px solid #4a3a50;
+    border-radius: 10px;
+    margin-top: 14px;
+    padding-top: 8px;
+}
+QGroupBox::title { subcontrol-origin: margin; left: 12px; color: #ffb3d1; }
+
+/* Barre de progression de l'installation */
+QProgressBar {
+    background-color: #2a1d33;
+    border: 1px solid #ff7eb6;
+    border-radius: 6px;
+    text-align: center;
+    color: #f5e6ef;
+}
+QProgressBar::chunk { background-color: #ff7eb6; border-radius: 5px; }
+
+/* Barres de défilement fines */
+QScrollBar:vertical   { background: #1a1220; width: 10px; margin: 0; }
+QScrollBar:horizontal { background: #1a1220; height: 10px; margin: 0; }
+QScrollBar::handle    { background: #4a3a50; border-radius: 5px; min-height: 30px; min-width: 30px; }
+QScrollBar::handle:hover { background: #ff7eb6; }
+QScrollBar::add-line, QScrollBar::sub-line { width: 0; height: 0; }
+
+QToolTip {
+    background-color: #2a1d33;
+    color: #f5e6ef;
+    border: 1px solid #ff7eb6;
+}
+
+/* Barre latérale (aussi définie dans branding.desc) */
+#sidebarApp { background-color: #1a1220; }

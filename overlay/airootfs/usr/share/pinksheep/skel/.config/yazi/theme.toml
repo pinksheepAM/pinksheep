@@ -1,0 +1,12 @@
+# Généré automatiquement par matugen — le reste du thème suit les 16 couleurs du terminal
+[mgr]
+cwd          = { fg = "#f9acff", bold = true }
+border_style = { fg = "#4e434e" }
+
+[tabs]
+active   = { fg = "#570066", bg = "#f9acff", bold = true }
+inactive = { fg = "#f9acff", bg = "#312730" }
+
+[mode]
+normal_main = { fg = "#570066", bg = "#f9acff", bold = true }
+normal_alt  = { fg = "#f9acff", bg = "#312730" }

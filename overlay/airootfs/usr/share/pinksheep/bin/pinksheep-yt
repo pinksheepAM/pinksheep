@@ -1,0 +1,41 @@
+#!/usr/bin/env bash
+# ╭──────────────────────────────────────────────────────────╮
+# │  PinkSheep — YouTube dans le terminal (SUPER + Y)          │
+# │  Recherche, choisis avec les flèches, Entrée pour lancer.  │
+# │  Pas de compte, pas de pub : yt-dlp + mpv.                 │
+# ╰──────────────────────────────────────────────────────────╯
+set -u
+ROSE=$'\e[35m'; GRIS=$'\e[90m'; RAZ=$'\e[0m'
+
+while true; do
+    clear
+    printf '\n  %s▶  YouTube dans le terminal%s\n' "$ROSE" "$RAZ"
+    printf '  %sEntrée vide pour quitter%s\n\n' "$GRIS" "$RAZ"
+    read -rp "  Rechercher : " requete
+    [[ -z "$requete" ]] && exit 0
+
+    printf '\n  %sRecherche…%s\n' "$GRIS" "$RAZ"
+    resultats=$(yt-dlp --flat-playlist --no-warnings \
+        --print "%(id)s	%(title)s	%(duration_string)s	%(channel)s" \
+        "ytsearch20:$requete" 2>/dev/null)
+    [[ -z "$resultats" ]] && { read -rp "  Aucun résultat. Entrée pour recommencer…" _; continue; }
+
+    choix=$(printf '%s\n' "$resultats" | fzf --delimiter='\t' --with-nth=2,3,4 \
+        --prompt="  Vidéo > " --height=100% --layout=reverse --border=rounded \
+        --header="Entrée : vidéo · Ctrl+A : audio seul · Échap : retour" \
+        --expect=ctrl-a) || continue
+
+    touche=$(sed -n 1p <<<"$choix")
+    ligne=$(sed -n 2p <<<"$choix")
+    [[ -z "$ligne" ]] && continue
+    id=$(cut -f1 <<<"$ligne"); titre=$(cut -f2 <<<"$ligne")
+    url="https://www.youtube.com/watch?v=$id"
+
+    if [[ "$touche" == "ctrl-a" ]]; then
+        printf '\n  %s♪ %s%s\n  %sEspace : pause · ←/→ : avancer · q : arrêter%s\n\n' "$ROSE" "$titre" "$RAZ" "$GRIS" "$RAZ"
+        mpv --no-video --ytdl-format='bestaudio/best' "$url"
+    else
+        mpv --ytdl-format='bestvideo[height<=1080]+bestaudio/best' "$url" >/dev/null 2>&1 &
+        disown
+    fi
+done

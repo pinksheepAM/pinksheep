@@ -1,0 +1,8 @@
+
+  PinkSheep - clé d'installation (base Arch Linux)
+
+  Menu d'installation :         pinksheep-demarrage
+  Installeur texte :            pinksheep-install
+  Wi-Fi :                       iwctl
+  Reprendre l'étape 2 :         pinksheep-install --etape2
+

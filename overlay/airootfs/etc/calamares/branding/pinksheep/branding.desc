@@ -1,0 +1,39 @@
+# PinkSheep — apparence de l'installeur graphique
+---
+componentName:  pinksheep
+
+welcomeStyleCalamares:   false
+welcomeExpandingLogo:    true
+windowExpanding:    fullscreen
+windowSize: 1024px,680px
+windowPlacement: center
+sidebar: widget
+navigation: widget
+
+strings:
+    productName:         "PinkSheep"
+    shortProductName:    "PinkSheep"
+    version:             "2026.11"
+    shortVersion:        "2026.11"
+    versionedName:       "PinkSheep 2026.11"
+    shortVersionedName:  "PinkSheep 2026.11"
+    bootloaderEntryName: "PinkSheep"
+    productUrl:          "https://wiki.archlinux.org/"
+    supportUrl:          "https://wiki.archlinux.org/"
+    knownIssuesUrl:      "https://wiki.archlinux.org/"
+    releaseNotesUrl:     "https://wiki.archlinux.org/"
+    donateUrl:           "https://archlinux.org/donate/"
+
+images:
+    productIcon:         "logo.png"
+    productLogo:         "logo.png"
+    productWelcome:      "bienvenue.png"
+
+style:
+   SidebarBackground:        "#1a1220"
+   SidebarText:              "#f5e6ef"
+   SidebarTextCurrent:       "#1a1220"
+   SidebarBackgroundCurrent: "#ff7eb6"
+
+slideshow:     "show.qml"
+slideshowAPI:  2

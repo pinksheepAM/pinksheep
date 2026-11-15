@@ -1,0 +1,33 @@
+# Invite de commande PinkSheep — les couleurs suivent celles du terminal (donc du fond d'écran)
+format = """
+[╭─](bright-black)$os$directory$git_branch$git_status$cmd_duration
+[╰─](bright-black)$character"""
+add_newline = true
+
+[os]
+disabled = false
+style = "bold purple"
+format = "[🐑 ]($style)"
+
+[directory]
+style = "bold purple"
+truncation_length = 3
+truncation_symbol = "…/"
+read_only = " 󰌾"
+
+[git_branch]
+style = "bold cyan"
+format = "[ $symbol$branch]($style) "
+symbol = " "
+
+[git_status]
+style = "yellow"
+
+[cmd_duration]
+min_time = 2000
+style = "bright-black"
+format = "[ $duration]($style)"
+
+[character]
+success_symbol = "[❯](bold purple)"
+error_symbol = "[❯](bold red)"

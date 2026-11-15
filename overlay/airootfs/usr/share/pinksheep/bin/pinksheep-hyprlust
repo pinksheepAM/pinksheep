@@ -1,0 +1,177 @@
+#!/usr/bin/env bash
+# ╭──────────────────────────────────────────────────────────────╮
+# │  PinkSheep — style « Hyprlust »                               │
+# │  (github.com/NischalDawadi/Hyprlust, par Nischal Dawadi)      │
+# │                                                              │
+# │  pinksheep-hyprlust              installe / met à jour        │
+# │  pinksheep-hyprlust --annuler    revient au style PinkSheep   │
+# │                                                              │
+# │  Télécharge le dépôt Hyprlust sur TON PC, puis :              │
+# │   • reprend ses configs d'applis (barre, lanceur, notifs,     │
+# │     terminal, fastfetch, musique, Yazi, btop, Neovim, mpv…)   │
+# │   • traduit ses couleurs wallust pour qu'elles suivent        │
+# │     le fond d'écran via matugen (comme le reste de PinkSheep) │
+# │   • remplace ses scripts écrits pour l'ancien Hyprland        │
+# │   • active ses réglages Hyprland (style-hyprlust.lua)         │
+# │  Une sauvegarde de tes configs est faite avant.               │
+# ╰──────────────────────────────────────────────────────────────╯
+set -uo pipefail
+
+DEPOT_URL="https://github.com/NischalDawadi/Hyprlust.git"
+PS=/usr/share/pinksheep
+DONNEES="${XDG_DATA_HOME:-$HOME/.local/share}/pinksheep"
+DEPOT="$DONNEES/hyprlust-depot"
+SAUVEGARDE="$DONNEES/sauvegarde-avant-hyprlust"
+CONF="$HOME/.config"
+AUTO=0
+
+# Configs d'applis reprises telles quelles (dossiers de .config)
+APPLIS=(waybar rofi swaync wlogout kitty fastfetch rmpc yazi btop zathura nvim mpv newsboat swappy)
+# Fichiers isolés
+FICHIERS=(starship.toml hypr/hyprlock.conf hypr/hyprlock-2k.conf hypr/image.png)
+
+ROSE=$'\e[1;35m'; GRIS=$'\e[90m'; ROUGE=$'\e[1;31m'; RAZ=$'\e[0m'
+etape()  { printf '%s:: %s%s\n' "$ROSE" "$*" "$RAZ"; }
+info()   { printf '%s   -> %s%s\n' "$GRIS" "$*" "$RAZ"; }
+echec()  { printf '%s[X] %s%s\n' "$ROUGE" "$*" "$RAZ"; exit 1; }
+en_session() { [[ -n "${HYPRLAND_INSTANCE_SIGNATURE:-}" ]]; }
+
+recharger() {
+    en_session || return 0
+    pkill -x waybar 2>/dev/null; sleep 0.3
+    (waybar >/dev/null 2>&1 & disown)
+    swaync-client -R >/dev/null 2>&1; swaync-client -rs >/dev/null 2>&1
+    hyprctl reload >/dev/null 2>&1
+}
+
+couleurs() {
+    # Régénère toutes les couleurs à partir du fond actuel (ou du fond par défaut)
+    local fond
+    fond="$(cat "${XDG_STATE_HOME:-$HOME/.local/state}/pinksheep/fond-actuel" 2>/dev/null)"
+    [[ -f "$fond" ]] || fond="$PS/wallpapers/pinksheep.png"
+    if en_session; then
+        pinksheep-fond "$fond"
+    else
+        matugen -c "$CONF/matugen/config.toml" image "$fond" -t scheme-vibrant --source-color-index 0 -q
+        [[ -f "$CONF/matugen/hyprlust/config.toml" ]] && \
+            matugen -c "$CONF/matugen/hyprlust/config.toml" image "$fond" -t scheme-vibrant --source-color-index 0 -q
+        ln -sf "$fond" "$CONF/rofi/.current_wallpaper"
+    fi
+}
+
+annuler() {
+    [[ -d "$SAUVEGARDE" ]] || echec "Aucune sauvegarde trouvée ($SAUVEGARDE)."
+    etape "Retour au style PinkSheep"
+    for a in "${APPLIS[@]}" "${FICHIERS[@]}" hypr/scripts hypr/UserScripts; do
+        rm -rf "${CONF:?}/$a"
+        [[ -e "$SAUVEGARDE/$a" ]] && { mkdir -p "$(dirname "$CONF/$a")"; cp -a "$SAUVEGARDE/$a" "$CONF/$a"; }
+    done
+    rm -rf "$CONF/matugen/hyprlust" "$CONF/pinksheep/style"
+    rm -rf "$SAUVEGARDE"
+    couleurs
+    recharger
+    etape "C'est fait : style PinkSheep rétabli."
+}
+
+installer() {
+    command -v git >/dev/null    || echec "git est nécessaire (sudo pacman -S git)."
+    command -v python3 >/dev/null || echec "python est nécessaire (sudo pacman -S python)."
+
+    if [[ $AUTO -eq 0 ]]; then
+        cat <<EOF
+
+  ${ROSE}Style Hyprlust${RAZ}
+  Va remplacer la config de : ${APPLIS[*]}
+  Tes configs actuelles sont sauvegardées, et  pinksheep-hyprlust --annuler  revient en arrière.
+
+EOF
+        read -rp "  Continuer ? [O/n] " rep
+        [[ "$rep" =~ ^[nN] ]] && exit 0
+    fi
+
+    etape "Téléchargement de Hyprlust"
+    mkdir -p "$DONNEES"
+    if [[ -d "$DEPOT/.git" ]]; then
+        git -C "$DEPOT" pull --ff-only -q || info "mise à jour impossible, on garde la version déjà téléchargée"
+    else
+        git clone --depth 1 -q "$DEPOT_URL" "$DEPOT" || echec "Téléchargement impossible (connexion internet ?)."
+    fi
+    local SRC="$DEPOT/.config"
+    [[ -d "$SRC" ]] || echec "Le dépôt n'a pas la structure attendue."
+
+    if [[ ! -d "$SAUVEGARDE" ]]; then
+        etape "Sauvegarde de tes configs actuelles"
+        mkdir -p "$SAUVEGARDE"
+        for a in "${APPLIS[@]}" "${FICHIERS[@]}" hypr/scripts hypr/UserScripts; do
+            if [[ -e "$CONF/$a" ]]; then
+                mkdir -p "$(dirname "$SAUVEGARDE/$a")"
+                cp -a "$CONF/$a" "$SAUVEGARDE/$a"
+            fi
+        done
+        info "dans $SAUVEGARDE"
+    fi
+
+    etape "Copie des configs Hyprlust"
+    for a in "${APPLIS[@]}"; do
+        if [[ -d "$SRC/$a" ]]; then
+            rm -rf "${CONF:?}/$a"
+            cp -a "$SRC/$a" "$CONF/$a"
+            info "$a"
+        fi
+    done
+    for f in "${FICHIERS[@]}"; do
+        [[ -e "$SRC/$f" ]] && { mkdir -p "$(dirname "$CONF/$f")"; cp -a "$SRC/$f" "$CONF/$f"; }
+    done
+    # Scripts dont la barre a besoin
+    for d in scripts UserScripts; do
+        rm -rf "${CONF:?}/hypr/$d"
+        [[ -d "$SRC/hypr/$d" ]] && cp -a "$SRC/hypr/$d" "$CONF/hypr/$d"
+    done
+    [[ -d "$SRC/hypr/icons" ]] && cp -a "$SRC/hypr/icons" "$CONF/hypr/"
+
+    etape "Adaptation à PinkSheep (Hyprland 0.57 + matugen)"
+    # 1) Liens qui pointaient vers le PC de l'auteur (/home/hypr/...)
+    while IFS= read -r lien; do
+        cible="$(readlink "$lien")"
+        if [[ "$cible" == /home/*/.config/* ]]; then
+            ln -sfn "$CONF/${cible#/home/*/.config/}" "$lien"
+            info "lien corrigé : ${lien#"$CONF"/}"
+        fi
+    done < <(find "${APPLIS[@]/#/$CONF/}" -type l 2>/dev/null)
+    # Chemins écrits en dur dans les fichiers
+    grep -rlI '/home/hypr' "${APPLIS[@]/#/$CONF/}" "$CONF/hypr/scripts" "$CONF/hypr/UserScripts" 2>/dev/null \
+        | xargs -r -d '\n' sed -i "s#/home/hypr#$HOME#g"
+
+    # 2) Scripts écrits pour l'ancien Hyprland / swww / wallust -> versions PinkSheep
+    cp -a "$PS/hyprlust/remplacements/." "$CONF/hypr/"
+    chmod +x "$CONF"/hypr/scripts/* "$CONF"/hypr/UserScripts/* 2>/dev/null
+
+    # 3) Couleurs : modèles wallust traduits pour matugen
+    python3 "$PS/hyprlust/wallust-vers-matugen.py" "$SRC/wallust" "$CONF/matugen/hyprlust" \
+        || echec "Traduction des couleurs impossible."
+
+    # 4) Réglages Hyprland Hyprlust (style-hyprlust.lua)
+    mkdir -p "$CONF/pinksheep"
+    echo "hyprlust" > "$CONF/pinksheep/style"
+    [[ -f "$CONF/hypr/style-hyprlust.lua" ]] || cp "$PS/skel/.config/hypr/style-hyprlust.lua" "$CONF/hypr/"
+
+    etape "Couleurs à partir du fond d'écran"
+    couleurs
+    recharger
+
+    cat <<EOF
+
+  ${ROSE}Style Hyprlust installé.${RAZ}
+  • SUPER + W : changer de fond, tout se recolore (barre et lanceur Hyprlust compris)
+  • SUPER + ALT + W / SUPER + CTRL + W : changer la disposition / le style de la barre
+  • SUPER + SHIFT + G : mode jeu       • SUPER + ALT + B : flou léger
+  • Revenir au style PinkSheep :  pinksheep-hyprlust --annuler
+EOF
+}
+
+case "${1:-}" in
+    --annuler) annuler ;;
+    --auto)    AUTO=1; installer ;;
+    -h|--help) sed -n '2,19p' "$0" ;;
+    *)         installer ;;
+esac

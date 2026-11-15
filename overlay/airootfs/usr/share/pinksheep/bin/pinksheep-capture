@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+# PinkSheep — captures d'écran.  Usage : pinksheep-capture zone|ecran
+# La capture est enregistrée dans Images/Captures ET copiée dans le presse-papiers.
+set -u
+mode="${1:-zone}"
+dossier="$(xdg-user-dir PICTURES 2>/dev/null || echo "$HOME/Images")/Captures"
+mkdir -p "$dossier"
+fichier="$dossier/capture_$(date +%Y-%m-%d_%H-%M-%S).png"
+
+case "$mode" in
+    zone)
+        zone="$(slurp -b 1a122088 -c ff7eb6ff -w 2)" || exit 0   # Échap = annuler
+        grim -g "$zone" "$fichier" ;;
+    ecran)
+        grim "$fichier" ;;
+    *)
+        echo "Usage : $0 zone|ecran" >&2; exit 1 ;;
+esac
+
+wl-copy --type image/png < "$fichier"
+
+action=$(notify-send -a "Capture" -i "$fichier" --action="annoter=Annoter" --action="dossier=Ouvrir le dossier" \
+         "Capture enregistrée 📸" "Copiée dans le presse-papiers.
+$(basename "$fichier")")
+case "$action" in
+    annoter) command -v satty >/dev/null && satty --filename "$fichier" --output-filename "$fichier" ;;
+    dossier) xdg-open "$dossier" ;;
+esac

@@ -1,0 +1,80 @@
+# ╭──────────────────────────────────────────────────────────────╮
+# │  PinkSheep — couleurs automatiques à partir du fond d'écran   │
+# │  Lancé par « pinksheep-fond » à chaque changement de fond.    │
+# │  Chaque [templates.x] prend un modèle dans modeles/ et écrit  │
+# │  le fichier de couleurs de l'appli correspondante.            │
+# │  Doc : https://github.com/InioX/matugen                       │
+# ╰──────────────────────────────────────────────────────────────╯
+[config]
+version_check = false
+fallback_color = "#ff7eb6"   # rose PinkSheep si l'image n'a aucune couleur nette
+
+# Couleurs du terminal : de vrais rouge, vert, etc., légèrement teintés
+# par la couleur du fond d'écran pour rester harmonieux.
+[config.custom_colors]
+rouge   = "#e05561"
+vert    = "#5fbf6f"
+jaune   = "#e5c07b"
+bleu    = "#5c9cf5"
+magenta = "#d470d0"
+cyan    = "#4fc1c8"
+
+[templates.hyprland]
+input_path  = "./modeles/hyprland.lua"
+output_path = "../hypr/couleurs.lua"
+
+[templates.hyprlock]
+input_path  = "./modeles/hyprlock.conf"
+output_path = "../hypr/hyprlock-couleurs.conf"
+
+[templates.waybar]
+input_path  = "./modeles/couleurs.css"
+output_path = "../waybar/couleurs.css"
+
+[templates.swaync]
+input_path  = "./modeles/couleurs.css"
+output_path = "../swaync/couleurs.css"
+
+[templates.wlogout]
+input_path  = "./modeles/couleurs.css"
+output_path = "../wlogout/couleurs.css"
+
+[templates.rofi]
+input_path  = "./modeles/rofi.rasi"
+output_path = "../rofi/couleurs.rasi"
+
+[templates.kitty]
+input_path  = "./modeles/kitty.conf"
+output_path = "../kitty/couleurs.conf"
+
+[templates.gtk3]
+input_path  = "./modeles/gtk.css"
+output_path = "../gtk-3.0/gtk.css"
+
+[templates.gtk4]
+input_path  = "./modeles/gtk.css"
+output_path = "../gtk-4.0/gtk.css"
+
+[templates.qt6ct]
+input_path  = "./modeles/qt6ct.conf"
+output_path = "../qt6ct/colors/pinksheep.conf"
+
+[templates.btop]
+input_path  = "./modeles/btop.theme"
+output_path = "../btop/themes/pinksheep.theme"
+
+[templates.cava]
+input_path  = "./modeles/cava"
+output_path = "../cava/config"
+
+[templates.nvim]
+input_path  = "./modeles/nvim.lua"
+output_path = "../nvim/lua/couleurs.lua"
+
+[templates.yazi]
+input_path  = "./modeles/yazi.toml"
+output_path = "../yazi/theme.toml"
+
+[templates.foot]
+input_path  = "./modeles/foot.ini"
+output_path = "../foot/couleurs.ini"

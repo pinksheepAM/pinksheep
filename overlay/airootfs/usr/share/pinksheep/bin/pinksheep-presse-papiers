@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+# PinkSheep — historique du presse-papiers (SUPER + SHIFT + V)
+choix=$(cliphist list | rofi -dmenu -i -p "Presse-papiers" -display-columns 2) || exit 0
+printf '%s' "$choix" | cliphist decode | wl-copy

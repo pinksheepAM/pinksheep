@@ -1,0 +1,12 @@
+# Généré automatiquement par matugen — le reste du thème suit les 16 couleurs du terminal
+[mgr]
+cwd          = { fg = "{{colors.primary.default.hex}}", bold = true }
+border_style = { fg = "{{colors.outline_variant.default.hex}}" }
+
+[tabs]
+active   = { fg = "{{colors.on_primary.default.hex}}", bg = "{{colors.primary.default.hex}}", bold = true }
+inactive = { fg = "{{colors.primary.default.hex}}", bg = "{{colors.surface_container_high.default.hex}}" }
+
+[mode]
+normal_main = { fg = "{{colors.on_primary.default.hex}}", bg = "{{colors.primary.default.hex}}", bold = true }
+normal_alt  = { fg = "{{colors.primary.default.hex}}", bg = "{{colors.surface_container_high.default.hex}}" }

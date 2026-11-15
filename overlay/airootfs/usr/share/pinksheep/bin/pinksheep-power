@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+# PinkSheep — menu éteindre / redémarrer (SUPER + Échap)
+# Grand menu wlogout aux couleurs du fond d'écran (repli sur Rofi si absent).
+if command -v wlogout >/dev/null 2>&1; then
+    pgrep -x wlogout >/dev/null && { pkill -x wlogout; exit 0; }
+    exec wlogout -b 5 -T 380 -B 380 -c 0 -r 0 --protocol layer-shell
+fi
+
+choix=$(printf '%s\n' "Verrouiller" "Mettre en veille" "Redémarrer" "Éteindre" "Se déconnecter" \
+    | rofi -dmenu -i -p "Session" -theme-str 'window { width: 340px; } listview { lines: 5; }')
+case "$choix" in
+    Verrouiller)      loginctl lock-session ;;
+    "Mettre en veille") systemctl suspend ;;
+    Redémarrer)       systemctl reboot ;;
+    Éteindre)         systemctl poweroff ;;
+    "Se déconnecter") hyprshutdown 2>/dev/null || hyprctl dispatch 'hl.dsp.exit()' ;;
+esac

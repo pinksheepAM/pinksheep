@@ -1,0 +1,54 @@
+/* Lanceur PinkSheep — couleurs : couleurs.rasi (généré depuis le fond d'écran) */
+@import "~/.config/rofi/couleurs.rasi"
+
+* {
+    background-color: transparent;
+    text-color: @texte;
+}
+
+window {
+    width: 600px;
+    background-color: @fond;
+    border: 2px;
+    border-color: @primaire;
+    border-radius: 16px;
+    padding: 14px;
+}
+
+mainbox { spacing: 10px; }
+
+inputbar {
+    background-color: @surface;
+    border-radius: 12px;
+    padding: 10px 14px;
+    spacing: 10px;
+    children: [ prompt, entry ];
+}
+prompt { text-color: @primaire; }
+entry  { placeholder: "Rechercher…"; placeholder-color: @discret; }
+
+listview {
+    lines: 8;
+    columns: 1;
+    spacing: 4px;
+    scrollbar: false;
+}
+
+element {
+    padding: 8px 12px;
+    border-radius: 10px;
+    spacing: 12px;
+}
+element-icon { size: 24px; }
+element-text { vertical-align: 0.5; }
+element selected.normal {
+    background-color: @primaire;
+    text-color: @surprim;
+}
+element-text selected { text-color: @surprim; }
+
+mode-switcher { spacing: 6px; }
+button { padding: 6px; border-radius: 10px; text-color: @discret; }
+button selected { background-color: @surface; text-color: @primaire; }
+
+message { background-color: @surface; border-radius: 10px; padding: 8px; }

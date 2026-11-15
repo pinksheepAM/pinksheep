@@ -1,0 +1,242 @@
+#!/usr/bin/env bash
+# ╭──────────────────────────────────────────────────────────────╮
+# │  PinkSheep — mise à jour de PinkSheep déjà installé           │
+# │                                                              │
+# │  pinksheep-maj                 dernière version (dépôt git)   │
+# │  pinksheep-maj FICHIER.zip     version contenue dans un zip   │
+# │  pinksheep-maj --verifier      y a-t-il une nouvelle version ? │
+# │  pinksheep-maj --forcer        réappliquer même si à jour     │
+# │  pinksheep-maj --depot URL     changer l'adresse du dépôt     │
+# │                                                              │
+# │  Ce qui est mis à jour :                                      │
+# │   • les fichiers PinkSheep (scripts, thèmes, fonds, modèles   │
+# │     de couleurs, écran de connexion, installeur de style…)   │
+# │   • les paquets ajoutés à PinkSheep (+ mise à jour du système)│
+# │   • TES configs, prudemment :                                 │
+# │       - fichier jamais modifié par toi  -> remplacé           │
+# │       - fichier que tu as modifié       -> gardé, et la       │
+# │         nouvelle version est posée à côté (.pinksheep-nouveau)│
+# │       - perso.lua, .zshrc.perso, fonds d'écran -> jamais      │
+# │         touchés                                               │
+# │     Une sauvegarde est faite avant chaque mise à jour.        │
+# ╰──────────────────────────────────────────────────────────────╯
+set -uo pipefail
+
+RACINE="${PINKSHEEP_RACINE:-}"          # pour les tests uniquement
+PS="$RACINE/usr/share/pinksheep"
+ETC="$RACINE/etc/pinksheep"
+BIN="$RACINE/usr/local/bin"
+DONNEES="${XDG_DATA_HOME:-$HOME/.local/share}/pinksheep"
+SOURCE="$DONNEES/source"
+CONF="$HOME/.config"
+SUDO="${PINKSHEEP_SUDO-sudo}"           # vide pendant les tests
+
+ROSE=$'\e[1;35m'; VERT=$'\e[32m'; JAUNE=$'\e[33m'; ROUGE=$'\e[1;31m'; GRIS=$'\e[90m'; RAZ=$'\e[0m'
+etape()  { printf '\n%s:: %s%s\n' "$ROSE" "$*" "$RAZ"; }
+info()   { printf '%s   -> %s%s\n' "$GRIS" "$*" "$RAZ"; }
+alerte() { printf '%s   [!] %s%s\n' "$JAUNE" "$*" "$RAZ"; }
+echec()  { printf '\n%s[X] %s%s\n\n' "$ROUGE" "$*" "$RAZ"; exit 1; }
+
+[[ $EUID -eq 0 && -z "$RACINE" ]] && echec "Lance pinksheep-maj avec ton compte, sans sudo (il le demandera quand il le faut)."
+
+# Fichiers générés (couleurs du fond, clavier) : on ne les remplace jamais
+GENERES=(
+    hypr/couleurs.lua hypr/hyprlock-couleurs.conf hypr/clavier.lua hypr/perso.lua
+    waybar/couleurs.css swaync/couleurs.css wlogout/couleurs.css rofi/couleurs.rasi
+    kitty/couleurs.conf foot/couleurs.ini gtk-3.0/gtk.css gtk-4.0/gtk.css
+    qt6ct/colors/pinksheep.conf qt6ct/qt6ct.conf btop/themes/pinksheep.theme
+    cava/config nvim/lua/couleurs.lua yazi/theme.toml mpd/mpd.conf
+)
+# Dossiers remplacés par le style Hyprlust : on n'y touche pas quand il est actif
+HYPRLUST=(waybar rofi swaync wlogout kitty fastfetch rmpc yazi btop zathura nvim mpv newsboat swappy
+          starship.toml hypr/hyprlock.conf)
+
+depot_url() { cat "$ETC/depot" 2>/dev/null || cat "$PS/depot.conf" 2>/dev/null; }
+
+# ── Récupérer la nouvelle version ─────────────────────────────
+recuperer_git() {
+    local url; url="$(depot_url)"
+    [[ -n "$url" ]] || echec "Aucun dépôt configuré. Utilise : pinksheep-maj --depot https://github.com/TON_NOM/pinksheep.git"
+    mkdir -p "$DONNEES"
+    if [[ -d "$SOURCE/.git" ]]; then
+        git -C "$SOURCE" remote set-url origin "$url"
+        git -C "$SOURCE" fetch -q origin || erreur_git
+        git -C "$SOURCE" reset -q --hard "origin/$(git -C "$SOURCE" rev-parse --abbrev-ref HEAD)" || erreur_git
+    else
+        rm -rf "$SOURCE"
+        git clone -q "$url" "$SOURCE" || erreur_git
+    fi
+    VERSION="$(git -C "$SOURCE" log -1 --format='%h — %s (%cd)' --date=format:'%d/%m/%Y')"
+    NOUVEAU="$SOURCE/overlay/airootfs/usr/share/pinksheep"
+}
+
+erreur_git() {
+    cat <<EOF
+
+${ROUGE}[X] Impossible de récupérer le dépôt PinkSheep.${RAZ}
+    Si le dépôt est privé, connecte ton compte GitHub une fois pour toutes :
+        sudo pacman -S --needed github-cli
+        gh auth login        (choisis GitHub.com, HTTPS, puis connexion par navigateur)
+        gh auth setup-git
+    puis relance  pinksheep-maj
+EOF
+    exit 1
+}
+
+recuperer_zip() {
+    local zip="$1" tmp
+    [[ -f "$zip" ]] || echec "Fichier introuvable : $zip"
+    tmp="$(mktemp -d)"
+    unzip -q "$zip" -d "$tmp" || echec "Le zip est illisible."
+    NOUVEAU="$(find "$tmp" -type d -path '*/overlay/airootfs/usr/share/pinksheep' | head -n1)"
+    [[ -n "$NOUVEAU" ]] || echec "Ce zip ne contient pas PinkSheep."
+    VERSION="zip $(basename "$zip") ($(date +%d/%m/%Y))"
+}
+
+# ── Partie système (avec sudo) ────────────────────────────────
+maj_systeme() {
+    etape "Fichiers PinkSheep du système"
+    $SUDO bash -s "$NOUVEAU" "$PS" "$BIN" "$ETC" "$RACINE" <<'SYS'
+set -e
+nouveau="$1"; ps="$2"; bin="$3"; etc="$4"; racine="$5"
+tmp="${ps}.nouveau"
+rm -rf "$tmp"; cp -a "$nouveau" "$tmp"
+rm -rf "${ps}.ancien"; [[ -d "$ps" ]] && mv "$ps" "${ps}.ancien"
+mv "$tmp" "$ps"; rm -rf "${ps}.ancien"
+chmod 755 "$ps/setup.sh" "$ps"/bin/* 2>/dev/null || true
+mkdir -p "$bin"
+install -m755 "$ps"/bin/* "$bin"/
+ln -sf "$ps/setup.sh" "$bin/pinksheep-setup"
+# Écran de connexion, session de secours, configs par défaut des nouveaux comptes
+if [[ -d "$ps/sddm/pinksheep" ]]; then
+    mkdir -p "$racine/usr/share/sddm/themes"
+    rm -rf "$racine/usr/share/sddm/themes/pinksheep"
+    cp -a "$ps/sddm/pinksheep" "$racine/usr/share/sddm/themes/pinksheep"
+fi
+if [[ -f "$ps/sessions/pinksheep-secours.desktop" ]]; then
+    install -Dm644 "$ps/sessions/pinksheep-secours.desktop" "$racine/usr/share/wayland-sessions/pinksheep-secours.desktop"
+fi
+# Configs par défaut des nouveaux comptes (en gardant le clavier choisi à l'installation)
+mkdir -p "$racine/etc/skel"
+clavier="$racine/etc/skel/.config/hypr/clavier.lua"
+garde=""; [[ -f "$clavier" ]] && garde="$(cat "$clavier")"
+cp -rT "$ps/skel" "$racine/etc/skel"
+[[ -n "$garde" ]] && printf '%s\n' "$garde" > "$clavier"
+mkdir -p "$etc"
+SYS
+    [[ $? -eq 0 ]] || echec "La mise à jour des fichiers système a échoué."
+    info "scripts, thèmes, fonds d'écran, écran de connexion"
+}
+
+maj_paquets() {
+    etape "Paquets"
+    local manquants=() cat paquet _
+    while read -r cat paquet _; do
+        [[ "$cat" == essentiel || "$cat" == bonus ]] || continue
+        pacman -Q "$paquet" >/dev/null 2>&1 && continue
+        pacman -Si "$paquet" >/dev/null 2>&1 || { [[ "$cat" == essentiel ]] && alerte "paquet introuvable : $paquet"; continue; }
+        manquants+=("$paquet")
+    done < "$PS/paquets.txt"
+    if [[ ${#manquants[@]} -eq 0 ]]; then
+        info "aucun nouveau paquet"
+    else
+        info "nouveaux paquets : ${manquants[*]}"
+    fi
+    # Sur Arch, on installe toujours avec une mise à jour complète (pas de mise à jour partielle)
+    printf '%s   Mise à jour complète du système en même temps (pacman -Syu).%s\n' "$GRIS" "$RAZ"
+    $SUDO pacman -Syu --needed ${manquants[@]+"${manquants[@]}"} || alerte "pacman a signalé un problème (voir ci-dessus)"
+}
+
+# ── Partie utilisateur ────────────────────────────────────────
+est_genere() {
+    local f
+    for f in "${GENERES[@]}"; do [[ "$1" == ".config/$f" ]] && return 0; done
+    [[ "$1" == .zshrc.perso ]] && return 0
+    return 1
+}
+est_hyprlust() {
+    [[ "$(cat "$CONF/pinksheep/style" 2>/dev/null)" == hyprlust ]] || return 1
+    local d
+    for d in "${HYPRLUST[@]}"; do [[ "$1" == ".config/$d" || "$1" == ".config/$d/"* ]] && return 0; done
+    return 1
+}
+
+maj_configs() {
+    etape "Tes configs"
+    local ancien="$1" nouveau="$PS/skel" sauvegarde rel cible n_maj=0 n_nouv=0 n_conflit=0
+    sauvegarde="$DONNEES/sauvegardes/$(date +%Y-%m-%d_%H-%M-%S)"
+    while IFS= read -r -d '' f; do
+        rel="${f#"$nouveau"/}"
+        cible="$HOME/$rel"
+        est_genere "$rel" && continue
+        est_hyprlust "$rel" && continue
+        if [[ ! -e "$cible" ]]; then
+            mkdir -p "$(dirname "$cible")"; cp -a "$f" "$cible"
+            n_nouv=$((n_nouv + 1)); continue
+        fi
+        cmp -s "$f" "$cible" && continue                       # déjà à jour
+        mkdir -p "$(dirname "$sauvegarde/$rel")"; cp -a "$cible" "$sauvegarde/$rel"
+        if [[ -f "$ancien/$rel" ]] && cmp -s "$ancien/$rel" "$cible"; then
+            cp -a "$f" "$cible"                                 # jamais modifié par toi
+            n_maj=$((n_maj + 1))
+        else
+            cp -a "$f" "$cible.pinksheep-nouveau"               # modifié par toi : on garde le tien
+            n_conflit=$((n_conflit + 1))
+            alerte "gardé ta version de ~/$rel  (nouvelle version : ~/$rel.pinksheep-nouveau)"
+        fi
+    done < <(find "$nouveau" -type f -print0)
+    info "$n_maj fichier(s) mis à jour, $n_nouv ajouté(s), $n_conflit gardé(s) tel(s) que tu les as modifiés"
+    [[ -d "$sauvegarde" ]] && info "sauvegarde : $sauvegarde"
+    rmdir "$sauvegarde" 2>/dev/null || true
+}
+
+regenerer() {
+    etape "Couleurs et rechargement"
+    local fond
+    fond="$(cat "${XDG_STATE_HOME:-$HOME/.local/state}/pinksheep/fond-actuel" 2>/dev/null)"
+    [[ -f "$fond" ]] || fond="$PS/wallpapers/pinksheep.png"
+    if [[ -n "${HYPRLAND_INSTANCE_SIGNATURE:-}" ]] && command -v pinksheep-fond >/dev/null; then
+        pinksheep-fond "$fond" >/dev/null 2>&1 && info "thème régénéré depuis ton fond d'écran"
+        pkill -x waybar 2>/dev/null; sleep 0.3; (waybar >/dev/null 2>&1 & disown)
+    elif command -v matugen >/dev/null; then
+        matugen -c "$CONF/matugen/config.toml" image "$fond" -t scheme-vibrant --source-color-index 0 -q \
+            && info "thème régénéré (il s'appliquera à ta prochaine connexion)"
+    fi
+}
+
+# ── Programme principal ───────────────────────────────────────
+VERSION=""; NOUVEAU=""
+case "${1:-}" in
+    -h|--help) sed -n '2,25p' "$0"; exit 0 ;;
+    --depot)
+        [[ -n "${2:-}" ]] || echec "Usage : pinksheep-maj --depot https://github.com/TON_NOM/pinksheep.git"
+        printf '%s\n' "$2" | $SUDO tee "$ETC/depot" >/dev/null && info "dépôt enregistré : $2"; exit 0 ;;
+    --verifier)
+        recuperer_git
+        actuelle="$(cat "$ETC/version" 2>/dev/null || echo inconnue)"
+        printf '\n  Installée  : %s\n  Disponible : %s\n\n' "$actuelle" "$VERSION"
+        exit 0 ;;
+    ""|--forcer)
+        etape "Récupération de la dernière version"; recuperer_git
+        if [[ "${1:-}" != --forcer && "$(cut -d' ' -f1 "$ETC/version" 2>/dev/null)" == "${VERSION%% *}" ]]; then
+            printf '\n%sPinkSheep est déjà à jour%s (%s).\n   Pour réappliquer quand même : pinksheep-maj --forcer\n\n' "$VERT" "$RAZ" "$VERSION"
+            exit 0
+        fi ;;
+    *.zip)    etape "Lecture du zip"; recuperer_zip "$1" ;;
+    *)        echec "Option inconnue : $1  (voir pinksheep-maj --help)" ;;
+esac
+info "version : $VERSION"
+
+# Copie de l'ancienne version des configs par défaut, pour savoir ce que tu as modifié
+ANCIEN="$(mktemp -d)"
+trap 'rm -rf "$ANCIEN"' EXIT
+[[ -d "$PS/skel" ]] && cp -a "$PS/skel/." "$ANCIEN/"
+
+maj_systeme
+[[ -z "${PINKSHEEP_SANS_PAQUETS:-}" ]] && maj_paquets
+maj_configs "$ANCIEN"
+regenerer
+printf '%s\n' "$VERSION" | $SUDO tee "$ETC/version" >/dev/null
+
+printf '\n%sPinkSheep est à jour.%s 🐑\n' "$VERT" "$RAZ"
+printf '   Certaines nouveautés (barre, écran de connexion) s'"'"'appliquent à la prochaine connexion.\n\n'

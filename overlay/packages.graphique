@@ -1,0 +1,11 @@
+# Paquets ajoutés au système live pour l'installeur graphique
+calamares
+cage
+qt6-wayland
+noto-fonts
+noto-fonts-emoji
+breeze-icons
+python
+os-prober
+ntfs-3g
+xkeyboard-config

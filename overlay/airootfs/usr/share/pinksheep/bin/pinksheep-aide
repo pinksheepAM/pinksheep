@@ -1,0 +1,50 @@
+#!/usr/bin/env bash
+# PinkSheep — aide-mémoire des raccourcis (SUPER + H).
+# Lit les raccourcis en direct depuis Hyprland : si tu en ajoutes dans perso.lua
+# avec une description, ils apparaissent ici automatiquement.
+
+if [[ "${1:-}" != "--dans-terminal" ]]; then
+    exec pinksheep-terminal --class pinksheep-aide "$0" --dans-terminal
+fi
+
+ROSE=$'\e[1;35m'; LAV=$'\e[95m'; GRIS=$'\e[90m'; RAZ=$'\e[0m'   # suivent les couleurs du thème
+
+liste_raccourcis() {
+    hyprctl binds -j | jq -r '
+        def mods:
+            [ (if (.modmask / 64 | floor) % 2 == 1 then "SUPER" else empty end),
+              (if (.modmask / 4  | floor) % 2 == 1 then "CTRL"  else empty end),
+              (if (.modmask / 8  | floor) % 2 == 1 then "ALT"   else empty end),
+              (if  .modmask              % 2 == 1 then "SHIFT" else empty end) ];
+        .[]
+        | select(.has_description and (.key | startswith("XF86") | not))
+        | ((mods + [.key]) | join(" + ")) as $combo
+        | "\($combo)\t\(.description)"'
+}
+
+joli() {
+    sed -E \
+        -e 's/code:19\b/0/' \
+        -e 's/code:10\b/1/; s/code:11\b/2/; s/code:12\b/3/; s/code:13\b/4/; s/code:14\b/5/' \
+        -e 's/code:15\b/6/; s/code:16\b/7/; s/code:17\b/8/; s/code:18\b/9/' \
+        -e 's/mouse:272/clic gauche/; s/mouse:273/clic droit/' \
+        -e 's/mouse_down/molette ↓/; s/mouse_up/molette ↑/' \
+        -e 's/\bReturn\b/Entrée/; s/\bspace\b/Espace/; s/\bEscape\b/Échap/; s/\bPrint\b/Impr. écran/' \
+        -e 's/\bleft\b/←/; s/\bright\b/→/; s/\bup\b/↑/; s/\bdown\b/↓/'
+}
+
+# Regroupe « Aller au bureau 1…10 » sur une seule ligne
+regroupe() {
+    awk -F'\t' '
+        $2 ~ /^Aller au bureau [0-9]+$/               { if (!a++) print "SUPER + 1 … 0\tAller au bureau 1 à 10"; next }
+        $2 ~ /^Envoyer la fenêtre au bureau [0-9]+$/  { if (!b++) print "SUPER + SHIFT + 1 … 0\tEnvoyer la fenêtre au bureau 1 à 10"; next }
+        !vu[$0]++'
+}
+
+clear
+printf '\n  %s🐑 PinkSheep — raccourcis clavier%s\n' "$ROSE" "$RAZ"
+printf '  %sSUPER = touche Windows · q pour quitter · / pour chercher%s\n\n' "$GRIS" "$RAZ"
+
+liste_raccourcis | joli | regroupe \
+    | awk -F'\t' -v r="$LAV" -v z="$RAZ" '{ printf "  %s%-32s%s %s\n", r, $1, z, $2 }' \
+    | less -R --prompt="PinkSheep — q pour quitter"

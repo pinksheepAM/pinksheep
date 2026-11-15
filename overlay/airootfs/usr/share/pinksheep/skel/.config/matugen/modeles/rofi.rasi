@@ -1,0 +1,10 @@
+/* Généré automatiquement par matugen à partir du fond d'écran */
+* {
+    fond:       {{colors.surface.default.hex}}e6;
+    surface:    {{colors.surface_container_high.default.hex}};
+    primaire:   {{colors.primary.default.hex}};
+    surprim:    {{colors.on_primary.default.hex}};
+    tertiaire:  {{colors.tertiary.default.hex}};
+    texte:      {{colors.on_surface.default.hex}};
+    discret:    {{colors.on_surface_variant.default.hex}};
+}

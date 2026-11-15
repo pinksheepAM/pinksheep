@@ -1,0 +1,47 @@
+#!/usr/bin/env bash
+# PinkSheep — menu de la clé live : installeur graphique, texte, Wi-Fi ou terminal
+set -u
+ROSE=$'\e[1;35m'; VERT=$'\e[32m'; ROUGE=$'\e[31m'; GRIS=$'\e[90m'; GRAS=$'\e[1m'; RAZ=$'\e[0m'
+
+premier=1
+graphique_dispo() { command -v calamares >/dev/null 2>&1 && command -v cage >/dev/null 2>&1; }
+internet_ok() { curl -fsS --max-time 5 -o /dev/null https://archlinux.org; }
+
+while true; do
+    clear
+    printf '\n%s   PinkSheep - installation%s\n\n' "$ROSE" "$RAZ"
+    if internet_ok; then
+        printf '   Internet : %sconnecté%s\n\n' "$VERT" "$RAZ"
+    else
+        printf '   Internet : %spas de connexion%s  (câble, ou choix 3 pour le Wi-Fi)\n\n' "$ROUGE" "$RAZ"
+    fi
+    if graphique_dispo; then
+        printf '   %s1%s  Installeur graphique  %s(recommandé)%s\n' "$GRAS" "$RAZ" "$GRIS" "$RAZ"
+    else
+        printf '   %s1%s  Installeur graphique  %s(absent de cette ISO)%s\n' "$GRIS" "$RAZ" "$GRIS" "$RAZ"
+    fi
+    printf '   %s2%s  Installeur texte\n' "$GRAS" "$RAZ"
+    printf '   %s3%s  Configurer le Wi-Fi\n' "$GRAS" "$RAZ"
+    printf '   %s4%s  Terminal (pour les experts)\n' "$GRAS" "$RAZ"
+    printf '   %s5%s  Éteindre\n\n' "$GRAS" "$RAZ"
+
+    defaut=2; graphique_dispo && defaut=1
+    if [[ $premier -eq 1 ]]; then
+        # Au démarrage : choix automatique au bout de 15 s
+        premier=0
+        if ! read -rt 15 -p "   Ton choix [$defaut] (automatique dans 15 s) : " choix; then
+            choix=$defaut; echo
+        fi
+    else
+        read -rp "   Ton choix [$defaut] : " choix
+    fi
+    case "${choix:-$defaut}" in
+        1) graphique_dispo && pinksheep-graphique ;;
+        2) pinksheep-install ;;
+        3) clear
+           printf '\nDans iwctl, tape :\n   station wlan0 scan\n   station wlan0 get-networks\n   station wlan0 connect "NomDuWifi"\n   exit\n\n'
+           iwctl ;;
+        4) printf '\nTape  pinksheep-demarrage  pour revenir à ce menu.\n\n'; exit 0 ;;
+        5) poweroff ;;
+    esac
+done

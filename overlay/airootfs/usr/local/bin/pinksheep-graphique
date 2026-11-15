@@ -1,0 +1,34 @@
+#!/usr/bin/env bash
+# PinkSheep — lance l'installeur graphique (Calamares) dans une petite session
+# Wayland plein écran (cage). Si l'écran graphique ne démarre pas, on revient
+# au menu et l'installeur texte reste disponible.
+set -u
+export XDG_RUNTIME_DIR="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}"
+mkdir -p "$XDG_RUNTIME_DIR" && chmod 700 "$XDG_RUNTIME_DIR"
+
+# Clavier français dans la session graphique
+export XKB_DEFAULT_LAYOUT="${XKB_DEFAULT_LAYOUT:-fr}"
+# Rendu logiciel : plus lent mais marche partout (VM, NVIDIA sans pilote…)
+export WLR_RENDERER="${WLR_RENDERER:-pixman}"
+export WLR_NO_HARDWARE_CURSORS=1
+export QT_QPA_PLATFORM=wayland
+export QT_QUICK_BACKEND=software
+export QT_WAYLAND_DISABLE_WINDOWDECORATION=1
+export LANG=fr_FR.UTF-8
+
+# La langue française doit exister dans le système live
+if ! locale -a 2>/dev/null | grep -qi '^fr_FR.utf8$'; then
+    sed -i 's/^#fr_FR.UTF-8/fr_FR.UTF-8/' /etc/locale.gen
+    locale-gen >/dev/null 2>&1
+fi
+
+journal=/tmp/pinksheep-graphique.log
+cage -s -- calamares -D 6 >"$journal" 2>&1
+code=$?
+if [[ $code -ne 0 ]]; then
+    printf '\n[!] La session graphique s'"'"'est arrêtée (code %s).\n' "$code"
+    printf '    Journal : %s  (et /root/.cache/calamares/session.log)\n' "$journal"
+    printf '    Tu peux utiliser l'"'"'installeur texte depuis le menu.\n\n'
+    read -rp "Entrée pour revenir au menu… " _
+fi
+exit "$code"

@@ -1,0 +1,24 @@
+# Visualiseur audio cava — généré par matugen (couleurs du fond d'écran)
+[general]
+framerate = 60
+bars = 0
+bar_width = 2
+bar_spacing = 1
+
+[input]
+method = pipewire
+source = auto
+
+[output]
+method = noncurses
+
+[color]
+gradient = 1
+gradient_count = 4
+gradient_color_1 = '{{colors.tertiary.default.hex}}'
+gradient_color_2 = '{{colors.secondary.default.hex}}'
+gradient_color_3 = '{{colors.primary.default.hex}}'
+gradient_color_4 = '{{colors.primary_fixed.default.hex}}'
+
+[smoothing]
+noise_reduction = 77

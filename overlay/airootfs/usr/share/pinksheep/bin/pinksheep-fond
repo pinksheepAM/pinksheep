@@ -1,0 +1,120 @@
+#!/usr/bin/env bash
+# ╭──────────────────────────────────────────────────────────────╮
+# │  PinkSheep — fond d'écran + couleurs automatiques             │
+# │                                                              │
+# │  pinksheep-fond --choisir      sélecteur avec miniatures      │
+# │                                (SUPER + W)                   │
+# │  pinksheep-fond --aleatoire    fond au hasard (SUPER+SHIFT+W) │
+# │  pinksheep-fond IMAGE          applique cette image           │
+# │  pinksheep-fond --restaurer    remet le dernier fond          │
+# │                                (au démarrage de la session)   │
+# │                                                              │
+# │  Mets tes images dans  Images/FondsEcran  : elles apparaissent │
+# │  dans le sélecteur à côté de celles de PinkSheep.             │
+# ╰──────────────────────────────────────────────────────────────╯
+set -u
+
+ETAT="${XDG_STATE_HOME:-$HOME/.local/state}/pinksheep"
+CACHE="${XDG_CACHE_HOME:-$HOME/.cache}/pinksheep/miniatures"
+IMAGES="$(xdg-user-dir PICTURES 2>/dev/null || echo "$HOME/Images")"
+DOSSIERS=("$IMAGES/FondsEcran" /usr/share/pinksheep/wallpapers)
+DEFAUT=/usr/share/pinksheep/wallpapers/pinksheep.png
+SCHEMA="scheme-vibrant"     # style des couleurs : scheme-tonal-spot = plus doux
+mkdir -p "$ETAT" "$CACHE" "$IMAGES/FondsEcran"
+
+lister_images() {
+    find "${DOSSIERS[@]}" -maxdepth 2 -type f \
+        \( -iname '*.png' -o -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.webp' -o -iname '*.gif' \) \
+        2>/dev/null | sort
+}
+
+attendre_awww() {
+    for _ in $(seq 1 50); do
+        awww query >/dev/null 2>&1 && return 0
+        sleep 0.1
+    done
+    return 1
+}
+
+afficher_fond() {
+    attendre_awww || { pgrep -x awww-daemon >/dev/null || awww-daemon & attendre_awww; }
+    awww img "$1" \
+        --transition-type grow --transition-pos 0.854,0.977 \
+        --transition-duration 1.4 --transition-fps 60 >/dev/null 2>&1
+}
+
+recharger_applis() {
+    hyprctl reload >/dev/null 2>&1                       # bordures
+    pkill -SIGUSR2 -x waybar 2>/dev/null                 # style de la barre
+    swaync-client -rs >/dev/null 2>&1                    # notifications
+    pkill -SIGUSR1 -x kitty 2>/dev/null                  # terminaux ouverts
+    # GTK : petit aller-retour pour forcer les applis ouvertes à relire leurs couleurs
+    if command -v gsettings >/dev/null; then
+        gsettings set org.gnome.desktop.interface color-scheme 'default'
+        gsettings set org.gnome.desktop.interface color-scheme 'prefer-dark'
+    fi
+}
+
+appliquer() {
+    local image
+    image="$(realpath "$1" 2>/dev/null)" || { notify-send -u critical "Fond d'écran" "Image introuvable : $1"; exit 1; }
+    afficher_fond "$image" &
+    if matugen -c "$HOME/.config/matugen/config.toml" image "$image" \
+            -t "$SCHEMA" --source-color-index 0 -q; then
+        # Style Hyprlust activé : ses propres fichiers de couleurs (traduits de wallust)
+        if [[ -f "$HOME/.config/matugen/hyprlust/config.toml" ]]; then
+            matugen -c "$HOME/.config/matugen/hyprlust/config.toml" image "$image" \
+                -t "$SCHEMA" --source-color-index 0 -q
+        fi
+        recharger_applis
+    else
+        notify-send -u critical "Couleurs" "matugen n'a pas pu lire cette image."
+    fi
+    printf '%s\n' "$image" > "$ETAT/fond-actuel"
+    mkdir -p "$HOME/.config/rofi" && ln -sf "$image" "$HOME/.config/rofi/.current_wallpaper"   # utilisé par les thèmes Hyprlust
+    wait
+    notify-send -a PinkSheep -i "$image" "Nouveau thème 🐑" "$(basename "$image")"
+}
+
+miniature() {
+    local src="$1" cle min
+    cle="$(printf '%s' "$src" | md5sum | cut -c1-16)"
+    min="$CACHE/$cle.png"
+    if [[ ! -f "$min" || "$src" -nt "$min" ]]; then
+        magick "${src}[0]" -strip -thumbnail 400x225^ -gravity center -extent 400x225 "$min" 2>/dev/null \
+            || cp "$src" "$min"
+    fi
+    printf '%s' "$min"
+}
+
+choisir() {
+    local liste choix
+    mapfile -t liste < <(lister_images)
+    [[ ${#liste[@]} -eq 0 ]] && { notify-send "Fond d'écran" "Aucune image dans ${DOSSIERS[0]}"; exit 1; }
+    choix=$(
+        for f in "${liste[@]}"; do
+            printf '%s\0icon\x1f%s\n' "$(basename "${f%.*}")" "$(miniature "$f")"
+        done | rofi -dmenu -i -show-icons -format i -p "Fond d'écran" \
+            -theme-str 'window { width: 70%; }
+                        listview { columns: 3; lines: 2; flow: horizontal; spacing: 12px; }
+                        element { orientation: vertical; padding: 8px; }
+                        element-icon { size: 9em; horizontal-align: 0.5; }
+                        element-text { horizontal-align: 0.5; }'
+    ) || exit 0
+    appliquer "${liste[$choix]}"
+}
+
+case "${1:---choisir}" in
+    --choisir)   choisir ;;
+    --aleatoire) appliquer "$(lister_images | shuf -n1)" ;;
+    --restaurer)
+        dernier="$(cat "$ETAT/fond-actuel" 2>/dev/null)"
+        if [[ -n "$dernier" && -f "$dernier" ]]; then
+            # Les couleurs sont déjà enregistrées : on remet juste l'image
+            attendre_awww && awww img "$dernier" --transition-type fade --transition-duration 0.6 >/dev/null 2>&1
+        else
+            appliquer "$DEFAUT"
+        fi ;;
+    -h|--help)   sed -n '2,16p' "$0" ;;
+    *)           appliquer "$1" ;;
+esac
