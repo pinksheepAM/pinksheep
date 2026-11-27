@@ -1,5 +1,10 @@
 # Nouveautés de PinkSheep
 
+## PinkSheep 1.1.1 (27/11/2026)
+
+- Menu de démarrage (GRUB) aux couleurs de PinkSheep : fond, mouton, menu arrondi, compte à rebours. Pour revenir au menu texte : sudo pinksheep-grub --texte (et sudo pinksheep-grub pour le remettre).
+- Discover : correction du démarrage hors de Plasma (paquet qqc2-desktop-style).
+
 ## PinkSheep 1.1 « Solide » (27/11/2026)
 
 - Mises à jour : une icône 󰚰 apparaît dans la barre quand il y a des mises à jour (système, applis, PinkSheep), en rouge si l'une corrige une faille connue. Un clic met tout à jour.

@@ -1,0 +1,76 @@
+# PinkSheep — thème du menu de démarrage (GRUB)
+# Polices : générées à l'installation par pinksheep-grub (grub-mkfont, Noto Sans).
+# Pour revenir au menu texte : sudo pinksheep-grub --texte
+
+title-text: ""
+desktop-image: "fond.png"
+desktop-image-scale-method: "crop"
+desktop-color: "#1a1220"
+terminal-font: "Noto Sans Regular 16"
+terminal-left: "10%"
+terminal-top: "10%"
+terminal-width: "80%"
+terminal-height: "80%"
+terminal-border: "0"
+
++ image {
+    left = 50%-75
+    top = 9%
+    width = 150
+    height = 150
+    file = "mouton.png"
+}
+
++ label {
+    left = 0
+    top = 9%+160
+    width = 100%
+    height = 50
+    align = "center"
+    text = "PinkSheep"
+    font = "Noto Sans Bold 36"
+    color = "#ff7eb6"
+}
+
++ boot_menu {
+    left = 50%-300
+    top = 9%+240
+    width = 600
+    height = 330
+    menu_pixmap_style = "menu_*.png"
+    item_font = "Noto Sans Regular 20"
+    item_color = "#d9c5d3"
+    selected_item_font = "Noto Sans Bold 20"
+    selected_item_color = "#1a1220"
+    selected_item_pixmap_style = "select_*.png"
+    item_height = 48
+    item_padding = 20
+    item_spacing = 8
+    icon_width = 0
+    icon_height = 0
+    item_icon_space = 0
+    scrollbar = false
+}
+
++ label {
+    id = "__timeout__"
+    left = 0
+    top = 9%+600
+    width = 100%
+    height = 30
+    align = "center"
+    text = "Démarrage automatique dans %d s"
+    font = "Noto Sans Regular 16"
+    color = "#a08a9a"
+}
+
++ label {
+    left = 0
+    top = 100%-50
+    width = 100%
+    height = 30
+    align = "center"
+    text = "Flèches : choisir   ·   Entrée : démarrer   ·   e : modifier   ·   c : console"
+    font = "Noto Sans Regular 16"
+    color = "#7d6a78"
+}

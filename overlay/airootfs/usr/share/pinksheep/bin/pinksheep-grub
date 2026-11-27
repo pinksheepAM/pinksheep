@@ -1,0 +1,109 @@
+#!/usr/bin/env bash
+# ╭──────────────────────────────────────────────────────────────╮
+# │  PinkSheep — apparence du menu de démarrage (GRUB)            │
+# │                                                              │
+# │  sudo pinksheep-grub            thème PinkSheep (par défaut)  │
+# │  sudo pinksheep-grub --texte    menu texte classique          │
+# │  pinksheep-grub --etat          lequel est utilisé ?          │
+# │                                                              │
+# │  --sans-mkconfig : ne régénère pas grub.cfg (installation)    │
+# │  En cas d'échec, l'ancien réglage est remis tel quel.         │
+# ╰──────────────────────────────────────────────────────────────╯
+set -uo pipefail
+SOURCE=/usr/share/pinksheep/grub/pinksheep
+CIBLE=/boot/grub/themes/pinksheep
+DEFAUT=/etc/default/grub
+REPERE_TEXTE=/etc/pinksheep/grub-texte
+
+MODE=theme; MKCONFIG=1
+for a in "$@"; do
+    case "$a" in
+        --texte) MODE=texte ;;
+        --theme) MODE=theme ;;
+        --etat)  MODE=etat ;;
+        --sans-mkconfig) MKCONFIG=0 ;;
+        -h|--help) sed -n '2,12p' "$0"; exit 0 ;;
+        *) echo "Option inconnue : $a"; exit 1 ;;
+    esac
+done
+
+if [[ $MODE == etat ]]; then
+    if grep -q "^GRUB_THEME=\"$CIBLE/theme.txt\"" "$DEFAUT" 2>/dev/null; then echo "Thème PinkSheep"
+    else echo "Menu texte"; fi
+    exit 0
+fi
+
+[[ $EUID -eq 0 ]] || { echo "À lancer avec sudo : sudo pinksheep-grub $*"; exit 1; }
+[[ -f "$DEFAUT" ]] || { echo "GRUB n'est pas utilisé sur ce PC : rien à faire."; exit 0; }
+
+# Règle une variable de /etc/default/grub (la décommente ou l'ajoute)
+regler() {
+    local cle="$1" valeur="$2"
+    if grep -qE "^#?[[:space:]]*$cle=" "$DEFAUT"; then
+        sed -i -E "s|^#?[[:space:]]*$cle=.*|$cle=$valeur|" "$DEFAUT"
+    else
+        printf '%s=%s\n' "$cle" "$valeur" >> "$DEFAUT"
+    fi
+}
+commenter() { sed -i -E "s|^($1=.*)|#\1|" "$DEFAUT"; }
+
+police() {
+    local nom
+    for nom in "$@"; do
+        for d in /usr/share/fonts/noto /usr/share/fonts/truetype/noto /usr/share/fonts/TTF; do
+            [[ -f "$d/$nom" ]] && { echo "$d/$nom"; return 0; }
+        done
+    done
+    return 1
+}
+
+sauvegarde="$(mktemp)"
+cp "$DEFAUT" "$sauvegarde"
+[[ -f "$DEFAUT.avant-pinksheep" ]] || cp "$DEFAUT" "$DEFAUT.avant-pinksheep"
+
+if [[ $MODE == theme ]]; then
+    [[ -f "$SOURCE/theme.txt" ]] || { echo "Thème introuvable ($SOURCE)."; exit 1; }
+    regulier="$(police NotoSans-Regular.ttf)" && gras="$(police NotoSans-Bold.ttf)" || {
+        echo "Police Noto Sans introuvable (paquet noto-fonts) : thème non appliqué."; exit 1; }
+    mkdir -p "$CIBLE"
+    cp -r "$SOURCE"/. "$CIBLE"/
+    # Polices au format GRUB, aux tailles utilisées par theme.txt
+    grub-mkfont -s 16 -o "$CIBLE/noto-16.pf2" "$regulier" &&
+    grub-mkfont -s 20 -o "$CIBLE/noto-20.pf2" "$regulier" &&
+    grub-mkfont -s 20 -o "$CIBLE/noto-gras-20.pf2" "$gras" &&
+    grub-mkfont -s 36 -o "$CIBLE/noto-gras-36.pf2" "$gras" || { echo "grub-mkfont a échoué."; exit 1; }
+    regler GRUB_THEME "\"$CIBLE/theme.txt\""
+    regler GRUB_GFXMODE auto
+    regler GRUB_TERMINAL_OUTPUT gfxterm
+    rm -f "$REPERE_TEXTE"
+    message="Thème PinkSheep appliqué au menu de démarrage."
+else
+    commenter GRUB_THEME
+    regler GRUB_TERMINAL_OUTPUT console
+    mkdir -p "$(dirname "$REPERE_TEXTE")"; touch "$REPERE_TEXTE"
+    message="Menu de démarrage en mode texte (pour revenir au thème : sudo pinksheep-grub)."
+fi
+
+if ((MKCONFIG)); then
+    CFG=/boot/grub/grub.cfg
+    ancien_cfg="$(mktemp)"; cp "$CFG" "$ancien_cfg" 2>/dev/null
+    windows_avant="$(grep -c "^menuentry .*Windows" "$ancien_cfg" 2>/dev/null)"
+    if ! grub-mkconfig -o "$CFG"; then
+        echo "grub-mkconfig a échoué : l'ancien réglage et l'ancien menu sont remis."
+        cp "$sauvegarde" "$DEFAUT"; cp "$ancien_cfg" "$CFG"
+        rm -f "$sauvegarde" "$ancien_cfg"
+        exit 1
+    fi
+    # Windows ne doit jamais disparaître du menu (os-prober peut échouer, ex. démarrage rapide)
+    windows_apres="$(grep -c "^menuentry .*Windows" "$CFG" 2>/dev/null)"
+    if (( ${windows_avant:-0} > 0 && ${windows_apres:-0} == 0 )); then
+        echo "Windows n'a pas été retrouvé : l'ancien menu est remis (thème inchangé pour l'instant)."
+        echo "  Désactive le « démarrage rapide » de Windows, puis relance : sudo pinksheep-grub"
+        cp "$sauvegarde" "$DEFAUT"; cp "$ancien_cfg" "$CFG"
+        rm -f "$sauvegarde" "$ancien_cfg"
+        exit 1
+    fi
+    rm -f "$ancien_cfg"
+fi
+rm -f "$sauvegarde"
+echo "$message"

@@ -35,3 +35,11 @@ if ((${#a_retirer[@]})) && pacman -Q okular >/dev/null 2>&1; then
     pacman -Rns --noconfirm "${a_retirer[@]}" >/dev/null 2>&1 && \
         echo "   -> Ménage : ${a_retirer[*]} retiré(s) (Okular reste le lecteur PDF)"
 fi
+
+# 2026-11 (1.2) : thème PinkSheep pour le menu de démarrage (sauf si on a choisi le menu texte)
+if [[ -f /etc/default/grub && ! -f /etc/pinksheep/grub-texte ]] && command -v grub-mkconfig >/dev/null; then
+    if ! cmp -s /usr/share/pinksheep/grub/pinksheep/theme.txt /boot/grub/themes/pinksheep/theme.txt; then
+        /usr/local/bin/pinksheep-grub --theme >/dev/null 2>&1 && \
+            echo "   -> Menu de démarrage aux couleurs de PinkSheep (menu texte : sudo pinksheep-grub --texte)"
+    fi
+fi
