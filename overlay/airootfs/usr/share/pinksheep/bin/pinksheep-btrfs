@@ -1,0 +1,66 @@
+#!/usr/bin/env bash
+# ╭──────────────────────────────────────────────────────────────╮
+# │  PinkSheep — instantanés btrfs dans le menu de démarrage      │
+# │                                                              │
+# │  sudo pinksheep-btrfs          l'activer (grub-btrfs)         │
+# │  pinksheep-btrfs --etat        où on en est                   │
+# │                                                              │
+# │  Seulement si le système est en btrfs (choix par défaut de    │
+# │  l'installeur). Chaque instantané Timeshift apparaît alors    │
+# │  dans GRUB (« Instantanés PinkSheep ») : on peut démarrer     │
+# │  dessus pour revenir en arrière. Sur ext4 : rien à faire.     │
+# │                                                              │
+# │  --sans-mkconfig : ne régénère pas le menu (installation)     │
+# ╰──────────────────────────────────────────────────────────────╯
+set -uo pipefail
+DROPIN=/etc/systemd/system/grub-btrfsd.service.d/pinksheep-timeshift.conf
+
+MODE=activer; MKCONFIG=1
+for a in "$@"; do
+    case "$a" in
+        --etat) MODE=etat ;;
+        --sans-mkconfig) MKCONFIG=0 ;;
+        -h|--help) sed -n '2,14p' "$0"; exit 0 ;;
+        *) echo "Option inconnue : $a"; exit 1 ;;
+    esac
+done
+
+fs="$(findmnt -no FSTYPE / 2>/dev/null)"
+
+if [[ $MODE == etat ]]; then
+    if [[ $fs != btrfs ]]; then
+        echo "Système en ${fs:-?} : instantanés dans le menu de démarrage indisponibles (il faut btrfs)."
+    elif systemctl is-enabled grub-btrfsd.service >/dev/null 2>&1 && [[ -f $DROPIN ]]; then
+        echo "Instantanés dans le menu de démarrage : activés"
+    else
+        echo "Instantanés dans le menu de démarrage : pas encore activés (sudo pinksheep-btrfs)"
+    fi
+    exit 0
+fi
+
+[[ $EUID -eq 0 ]] || { echo "À lancer avec sudo : sudo pinksheep-btrfs $*"; exit 1; }
+[[ $fs == btrfs ]] || { echo "Système en ${fs:-?} : rien à faire (les instantanés dans GRUB demandent btrfs)."; exit 0; }
+[[ -f /etc/default/grub ]] || { echo "GRUB n'est pas utilisé sur ce PC : rien à faire."; exit 0; }
+
+pacman -S --needed --noconfirm grub-btrfs inotify-tools >/dev/null \
+    || { echo "Installation de grub-btrfs impossible."; exit 1; }
+
+# Le démon surveille les instantanés de Timeshift (et non /.snapshots, qui est pour snapper)
+attendu='[Service]
+ExecStart=
+ExecStart=/usr/bin/grub-btrfsd --syslog --timeshift-auto'
+if [[ "$(cat "$DROPIN" 2>/dev/null)" != "$attendu" ]]; then
+    mkdir -p "$(dirname "$DROPIN")"
+    printf '%s\n' "$attendu" > "$DROPIN"
+fi
+if [[ -d /run/systemd/system ]]; then          # système démarré (pas l'installeur)
+    systemctl daemon-reload
+    systemctl enable --now grub-btrfsd.service >/dev/null 2>&1
+else
+    systemctl enable grub-btrfsd.service >/dev/null 2>&1
+fi
+
+if ((MKCONFIG)); then
+    /usr/local/bin/pinksheep-grub --regenerer || exit 1
+fi
+echo "Instantanés dans le menu de démarrage activés (sous-menu de GRUB, un par instantané Timeshift)."

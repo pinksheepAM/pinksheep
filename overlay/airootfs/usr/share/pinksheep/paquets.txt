@@ -139,6 +139,8 @@ bonus     discord
 bonus     obs-studio
 bonus     flatpak
 bonus     timeshift
+bonus     grub-btrfs
+bonus     inotify-tools
 bonus     discover
 bonus     qqc2-desktop-style
 bonus     pacman-contrib

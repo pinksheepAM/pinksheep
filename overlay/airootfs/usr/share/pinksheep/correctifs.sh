@@ -85,3 +85,14 @@ if command -v flatpak >/dev/null && [[ ! -f /etc/pinksheep/heroic-installe ]]; t
         echo "   -> Heroic n'a pas pu être installé (connexion ?) : ce sera retenté à la prochaine mise à jour"
     fi
 fi
+
+# 2026-11 (installeur-securite) : système en btrfs → instantanés Timeshift dans le menu de
+# démarrage (grub-btrfs). Sur ext4 (installations d'avant), rien.
+if [[ "$(findmnt -no FSTYPE / 2>/dev/null)" == btrfs && -f /etc/default/grub ]] \
+   && [[ ! -f /etc/systemd/system/grub-btrfsd.service.d/pinksheep-timeshift.conf ]]; then
+    if /usr/local/bin/pinksheep-btrfs >/dev/null 2>&1; then
+        echo "   -> Instantanés Timeshift disponibles dans le menu de démarrage"
+    else
+        echo "   -> Instantanés dans le menu de démarrage non activés (sudo pinksheep-btrfs pour réessayer)"
+    fi
+fi

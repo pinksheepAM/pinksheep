@@ -309,6 +309,10 @@ if [[ -f /etc/default/grub ]]; then
     if [[ ! -f /etc/pinksheep/grub-texte ]]; then
         /usr/local/bin/pinksheep-grub --theme --sans-mkconfig || alerte "thème GRUB non appliqué (menu texte gardé)"
     fi
+    # Système en btrfs (choix par défaut) : les instantanés Timeshift dans le menu
+    if [[ "$(findmnt -no FSTYPE / 2>/dev/null)" == btrfs ]]; then
+        /usr/local/bin/pinksheep-btrfs --sans-mkconfig || alerte "instantanés dans le menu de démarrage non activés"
+    fi
     grub-mkconfig -o /boot/grub/grub.cfg || alerte "grub-mkconfig a échoué"
     info "GRUB configuré (Windows apparaîtra dans le menu s'il est détecté)"
 elif compgen -G "/boot/loader/entries/*.conf" >/dev/null; then
