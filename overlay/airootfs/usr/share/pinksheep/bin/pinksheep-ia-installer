@@ -1,0 +1,35 @@
+#!/usr/bin/env bash
+# ╭──────────────────────────────────────────────────────────────╮
+# │  PinkSheep — installe l'assistant IA, adapté à ce PC          │
+# │  (appelé par l'installation ; à la main : sudo pinksheep-ia-installer) │
+# │                                                              │
+# │  Détecte la carte graphique et la mémoire, installe la bonne  │
+# │  version d'Ollama, et prépare le téléchargement du modèle     │
+# │  (2 à 5 Go) qui se fera en arrière-plan à la connexion.       │
+# │  Rien n'est envoyé sur internet : le moteur n'écoute que      │
+# │  sur ce PC (127.0.0.1).                                       │
+# ╰──────────────────────────────────────────────────────────────╯
+set -uo pipefail
+[[ $EUID -eq 0 ]] || { echo "À lancer avec sudo : sudo pinksheep-ia-installer"; exit 1; }
+IA=/usr/share/pinksheep/ia
+PROFIL=/etc/pinksheep/ia.json
+mkdir -p /etc/pinksheep
+
+profil_json="$(PYTHONPATH=$IA python3 -m pinksheep_ia.materiel)" || { echo "Détection impossible."; exit 1; }
+printf '%s\n' "$profil_json" > "$PROFIL"
+acceleration="$(python3 -c 'import json,sys; print(json.load(sys.stdin)["acceleration"])' <<<"$profil_json")"
+raison="$(python3 -c 'import json,sys; print(json.load(sys.stdin)["raison"])' <<<"$profil_json")"
+mapfile -t paquets < <(python3 -c 'import json,sys; print("\n".join(json.load(sys.stdin)["paquets"]))' <<<"$profil_json")
+
+echo "Assistant IA : $raison"
+if [[ $acceleration == desactive ]]; then
+    exit 0
+fi
+
+pacman -S --needed --noconfirm "${paquets[@]}" pyside6 libsecret gnome-keyring \
+    || { echo "Paquets de l'assistant non installés (il restera désactivé)."; exit 1; }
+systemctl enable ollama.service >/dev/null 2>&1 || true
+install -Dm644 "$IA/pinksheep-ia.desktop" /usr/share/applications/pinksheep-ia.desktop
+install -Dm644 "$IA/systemd/pinksheep-ia-modele.service" /etc/systemd/user/pinksheep-ia-modele.service
+systemctl --global enable pinksheep-ia-modele.service >/dev/null 2>&1 || true
+echo "Assistant prêt à l'emploi après le téléchargement du modèle (en arrière-plan, à la prochaine connexion)."

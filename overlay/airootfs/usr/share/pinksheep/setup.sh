@@ -300,6 +300,12 @@ else
 fi
 
 # ────────────────────────────────────────────────────────────────
+etape "Assistant IA (adapté à ce PC)"
+# Choisit tout seul : NVIDIA / AMD / processeur / désactivé. Le modèle (2 à 5 Go)
+# se télécharge en arrière-plan après la première connexion, sans rien bloquer.
+/usr/local/bin/pinksheep-ia-installer || alerte "assistant IA non installé (sudo pinksheep-ia-installer plus tard)"
+
+# ────────────────────────────────────────────────────────────────
 etape "Écran de chargement au démarrage"
 # Avant le menu GRUB et l'image de démarrage, reconstruits juste après
 /usr/local/bin/pinksheep-chargement --sans-regenerer \

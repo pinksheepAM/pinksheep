@@ -1,0 +1,17 @@
+[Unit]
+Description=PinkSheep : téléchargement du modèle de l'assistant (arrière-plan)
+After=network-online.target
+Wants=network-online.target
+ConditionPathExists=/etc/pinksheep/ia.json
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/pinksheep-ia-modele
+Nice=19
+IOSchedulingClass=idle
+CPUSchedulingPolicy=idle
+Restart=on-failure
+RestartSec=15min
+
+[Install]
+WantedBy=default.target

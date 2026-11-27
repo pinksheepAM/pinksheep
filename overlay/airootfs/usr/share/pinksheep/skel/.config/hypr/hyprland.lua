@@ -254,6 +254,7 @@ bind(mainMod .. " + SHIFT + W", hl.dsp.exec_cmd("pinksheep-fond --aleatoire"), "
 bind(mainMod .. " + SHIFT + M", hl.dsp.exec_cmd(terminal .. " --class pinksheep-musique rmpc"), "Musique (rmpc)")
 bind(mainMod .. " + Y",         hl.dsp.exec_cmd(terminal .. " --class pinksheep-yt pinksheep-yt"), "YouTube dans le terminal")
 bind(mainMod .. " + SHIFT + A", hl.dsp.exec_cmd(terminal .. " --class pinksheep-cava cava"), "Visualiseur audio (cava)")
+bind(mainMod .. " + A",         hl.dsp.exec_cmd("pinksheep-ia"),         "Assistant IA PinkSheep")
 
 -- Aide & système
 bind(mainMod .. " + H",           hl.dsp.exec_cmd("pinksheep-aide"),          "Afficher cette aide")
@@ -352,6 +353,13 @@ hl.window_rule({
 })
 
 -- Aide-mémoire et gestionnaire des tâches
+hl.window_rule({
+    name   = "assistant-ia",
+    match  = { class = "^(pinksheep-ia)$" },
+    float  = true,
+    center = true,
+    size   = "620 520",
+})
 hl.window_rule({
     name   = "aide-pinksheep",
     match  = { class = "^(pinksheep-aide|pinksheep-btop|pinksheep-maj)$" },

@@ -96,3 +96,7 @@ output_path = "../yazi/theme.toml"
 [templates.foot]
 input_path  = "./modeles/foot.ini"
 output_path = "../foot/couleurs.ini"
+
+[templates.ia]
+input_path  = "./modeles/ia-couleurs.json"
+output_path = "../pinksheep/ia-couleurs.json"

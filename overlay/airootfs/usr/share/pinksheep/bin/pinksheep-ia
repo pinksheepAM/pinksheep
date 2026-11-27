@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+# PinkSheep — assistant IA (SUPER + A). Détails : pinksheep-ia --help
+# Fenêtre déjà ouverte ? On la met au premier plan au lieu d'en ouvrir une deuxième.
+if [[ $# -eq 0 && -n "${HYPRLAND_INSTANCE_SIGNATURE:-}" ]] \
+   && hyprctl clients -j 2>/dev/null | grep -q '"class": "pinksheep-ia"'; then
+    exec hyprctl dispatch 'hl.dsp.focus({ window = "class:pinksheep-ia" })' >/dev/null
+fi
+export PYTHONPATH="${PINKSHEEP_IA_DIR:-/usr/share/pinksheep/ia}${PYTHONPATH:+:$PYTHONPATH}"
+# Fenêtre demandée mais assistant pas installé sur ce PC : on le dit au lieu de planter
+if [[ $# -eq 0 ]] && ! python3 -c 'import PySide6' 2>/dev/null; then
+    msg="L'assistant n'est pas installé sur ce PC : sudo pinksheep-ia-installer"
+    notify-send -a PinkSheep -i dialog-information "Assistant PinkSheep" "$msg" 2>/dev/null || echo "$msg"
+    exit 1
+fi
+exec python3 -m pinksheep_ia "$@"
