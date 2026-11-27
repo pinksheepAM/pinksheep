@@ -1,0 +1,107 @@
+# PinkSheep — écran de chargement (Plymouth)
+# Même décor que le menu de démarrage : fond violet, mouton, titre rose,
+# et trois points qui s'allument à tour de rôle pendant le chargement.
+
+L = Window.GetWidth();
+H = Window.GetHeight();
+f = H / 1080;   # tailles prévues pour un écran 1080p, puis mises à l'échelle
+
+# ── Fond : rempli sans déformer (recadré au centre) ─────────────────
+fond_image = Image("fond.png");
+echelle = Math.Max(L / fond_image.GetWidth(), H / fond_image.GetHeight());
+fond_l = Math.Int(fond_image.GetWidth() * echelle);
+fond_h = Math.Int(fond_image.GetHeight() * echelle);
+fond = Sprite(fond_image.Scale(fond_l, fond_h));
+fond.SetPosition(Math.Int((L - fond_l) / 2), Math.Int((H - fond_h) / 2), -100);
+Window.SetBackgroundTopColor(0.10, 0.07, 0.13);
+Window.SetBackgroundBottomColor(0.10, 0.07, 0.13);
+
+# ── Mouton et titre ─────────────────────────────────────────────────
+taille_mouton = Math.Int(170 * f);
+mouton_image = Image("mouton.png").Scale(taille_mouton, taille_mouton);
+mouton = Sprite(mouton_image);
+mouton_x = Math.Int(L / 2 - taille_mouton / 2);
+mouton_y = Math.Int(H * 0.40 - taille_mouton / 2);
+mouton.SetPosition(mouton_x, mouton_y, 10);
+
+titre_source = Image("titre.png");
+titre_l = Math.Int(titre_source.GetWidth() * 0.75 * f);
+titre_h = Math.Int(titre_source.GetHeight() * 0.75 * f);
+titre = Sprite(titre_source.Scale(titre_l, titre_h));
+titre_y = mouton_y + taille_mouton + Math.Int(14 * f);
+titre.SetPosition(Math.Int(L / 2 - titre_l / 2), titre_y, 10);
+
+# ── Trois points animés ─────────────────────────────────────────────
+taille_point = Math.Max(Math.Int(14 * f), 8);
+point_image = Image("point.png").Scale(taille_point, taille_point);
+ecart = Math.Int(30 * f);
+points_y = titre_y + titre_h + Math.Int(40 * f);
+for (i = 0; i < 3; i++) {
+    points[i] = Sprite(point_image);
+    points[i].SetPosition(Math.Int(L / 2 - taille_point / 2 + (i - 1) * ecart), points_y, 10);
+    points[i].SetOpacity(0.3);
+}
+
+temps = 0;
+global.saisie = 0;   # 1 pendant la demande de mot de passe : les points se cachent
+fun rafraichir() {
+    temps++;
+    # Le mouton « respire » doucement
+    mouton.SetY(mouton_y + Math.Int(Math.Sin(temps / 25) * 4 * f));
+    # Chaque point s'allume à son tour (une vague toutes les ~1,2 s)
+    for (i = 0; i < 3; i++) {
+        phase = Math.Sin(temps / 9 - i * 0.9);
+        points[i].SetOpacity((1 - global.saisie) * (0.25 + 0.75 * Math.Max(phase, 0)));
+    }
+}
+Plymouth.SetRefreshFunction(rafraichir);
+
+# ── Mot de passe (seulement si le disque est chiffré) ───────────────
+champ_image = Image("champ.png").Scale(Math.Int(360 * f), Math.Int(48 * f));
+champ = Sprite(champ_image);
+champ_x = Math.Int(L / 2 - champ_image.GetWidth() / 2);
+champ_y = points_y + Math.Int(6 * f);
+champ.SetPosition(champ_x, champ_y, 20);
+champ.SetOpacity(0);
+question = Sprite();
+question.SetPosition(champ_x, champ_y - Math.Int(32 * f), 20);
+puces_taille = Math.Max(Math.Int(10 * f), 6);
+puce_image = Image("point.png").Scale(puces_taille, puces_taille);
+
+fun cacher_puces() {
+    for (i = 0; global.puces[i]; i++) global.puces[i].SetOpacity(0);
+}
+
+fun mot_de_passe(texte, nombre) {
+    global.saisie = 1;
+    champ.SetOpacity(1);
+    question.SetImage(Image.Text(texte, 1, 1, 1, 0.85, "Noto Sans 14"));
+    question.SetX(Math.Int(L / 2 - question.GetImage().GetWidth() / 2));
+    question.SetOpacity(1);
+    cacher_puces();
+    max = Math.Int((champ_image.GetWidth() - 40 * f) / (puces_taille + 6 * f));
+    for (i = 0; i < nombre && i < max; i++) {
+        if (!global.puces[i]) global.puces[i] = Sprite(puce_image);
+        global.puces[i].SetPosition(champ_x + Math.Int(24 * f) + Math.Int(i * (puces_taille + 6 * f)),
+                             champ_y + Math.Int(champ_image.GetHeight() / 2 - puces_taille / 2), 30);
+        global.puces[i].SetOpacity(1);
+    }
+}
+Plymouth.SetDisplayPasswordFunction(mot_de_passe);
+
+fun normal() {
+    champ.SetOpacity(0);
+    question.SetOpacity(0);
+    cacher_puces();
+    global.saisie = 0;
+}
+Plymouth.SetDisplayNormalFunction(normal);
+
+# ── Messages importants (ex. vérification du disque) ────────────────
+message = Sprite();
+message.SetPosition(0, Math.Int(H * 0.88), 20);
+fun afficher_message(texte) {
+    message.SetImage(Image.Text(texte, 1, 1, 1, 0.7, "Noto Sans 12"));
+    message.SetX(Math.Int(L / 2 - message.GetImage().GetWidth() / 2));
+}
+Plymouth.SetMessageFunction(afficher_message);

@@ -1,5 +1,10 @@
 # Nouveautés de PinkSheep
 
+## PinkSheep 1.1.3 (27/11/2026)
+
+- Écran de chargement : après le menu, un écran PinkSheep (mouton, titre rose, points animés) remplace les messages du système jusqu'à l'écran de connexion. Échap montre les messages ; pour les retrouver à chaque démarrage : sudo pinksheep-chargement --off.
+- Le menu ne laisse plus passer les lignes « Chargement de Linux… ».
+
 ## PinkSheep 1.1.2 (27/11/2026)
 
 - Démarrage : les messages « Chargement de Linux… » s'affichent dans une carte arrondie aux couleurs du thème, sous le mouton, au lieu d'un grand rectangle noir.

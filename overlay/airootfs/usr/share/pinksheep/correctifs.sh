@@ -43,3 +43,16 @@ if [[ -f /etc/default/grub && ! -f /etc/pinksheep/grub-texte ]] && command -v gr
             echo "   -> Menu de démarrage aux couleurs de PinkSheep (menu texte : sudo pinksheep-grub --texte)"
     fi
 fi
+
+# 2026-11 (1.1.3) : écran de chargement PinkSheep (Plymouth), sauf si on l'a désactivé
+if command -v plymouth-set-default-theme >/dev/null && [[ ! -f /etc/pinksheep/chargement-off ]]; then
+    if ! grep -Eq '^HOOKS=.*\bplymouth\b' /etc/mkinitcpio.conf 2>/dev/null \
+       || ! diff -rq /usr/share/pinksheep/plymouth/pinksheep /usr/share/plymouth/themes/pinksheep >/dev/null 2>&1; then
+        echo "   -> Écran de chargement : installation (une minute environ)…"
+        if sortie="$(/usr/local/bin/pinksheep-chargement 2>&1)"; then
+            echo "   -> Écran de chargement PinkSheep activé (désactiver : sudo pinksheep-chargement --off)"
+        else
+            echo "   -> Écran de chargement non activé :"; tail -n 3 <<<"$sortie" | sed 's/^/      /'
+        fi
+    fi
+fi

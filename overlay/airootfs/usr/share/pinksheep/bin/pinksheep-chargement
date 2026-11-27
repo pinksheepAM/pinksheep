@@ -1,0 +1,145 @@
+#!/usr/bin/env bash
+# ╭──────────────────────────────────────────────────────────────╮
+# │  PinkSheep — écran de chargement au démarrage (Plymouth)      │
+# │                                                              │
+# │  sudo pinksheep-chargement             l'activer (défaut)     │
+# │  sudo pinksheep-chargement --off       revenir aux messages   │
+# │  pinksheep-chargement --etat           activé ou non ?        │
+# │                                                              │
+# │  Pendant le démarrage, Échap montre les messages du système.  │
+# │  --sans-regenerer : ne reconstruit ni l'image de démarrage    │
+# │  ni le menu GRUB (utilisé par l'installation).                │
+# ╰──────────────────────────────────────────────────────────────╯
+set -uo pipefail
+SOURCE=/usr/share/pinksheep/plymouth/pinksheep
+THEMES=/usr/share/plymouth/themes
+MKINIT=/etc/mkinitcpio.conf
+DEFAUT=/etc/default/grub
+LINUX_GRUB=/etc/grub.d/10_linux
+ORIGINAL=/etc/pinksheep/10_linux.original
+CROCHET=/etc/pacman.d/hooks/pinksheep-grub-silencieux.hook
+REPERE_OFF=/etc/pinksheep/chargement-off
+# splash : écran de chargement ; plymouth.use-simpledrm : il s'affiche dès le début,
+# avant même le pilote graphique (NVIDIA compris), à la résolution choisie par GRUB
+OPTIONS=(quiet splash plymouth.use-simpledrm)
+
+MODE=activer; REGENERER=1
+for a in "$@"; do
+    case "$a" in
+        --on|--activer) MODE=activer ;;
+        --off|--desactiver) MODE=desactiver ;;
+        --etat) MODE=etat ;;
+        --grub-silencieux) MODE=silence ;;
+        --sans-regenerer) REGENERER=0 ;;
+        -h|--help) sed -n '2,13p' "$0"; exit 0 ;;
+        *) echo "Option inconnue : $a"; exit 1 ;;
+    esac
+done
+
+hooks_ont_plymouth() { grep -Eq '^HOOKS=.*\bplymouth\b' "$MKINIT" 2>/dev/null; }
+
+if [[ $MODE == etat ]]; then
+    if hooks_ont_plymouth && grep -q '^GRUB_CMDLINE_LINUX_DEFAULT=.*\bsplash\b' "$DEFAUT" 2>/dev/null; then
+        echo "Écran de chargement PinkSheep : activé"
+    else
+        echo "Écran de chargement : désactivé (messages du système)"
+    fi
+    exit 0
+fi
+
+[[ $EUID -eq 0 ]] || { echo "À lancer avec sudo : sudo pinksheep-chargement $*"; exit 1; }
+
+# Les lignes « Chargement de Linux… » de GRUB : retirées du script qui écrit le menu.
+# Une mise à jour de GRUB remet ce script d'origine : le crochet pacman les retire à nouveau.
+silence_grub() {
+    [[ -f "$LINUX_GRUB" ]] || return 0
+    local motif="^[[:space:]]*echo[[:space:]]+'\\\$\(echo \"\\\$message\" \| grub_quote\)'[[:space:]]*$"
+    if grep -Eq "$motif" "$LINUX_GRUB"; then
+        mkdir -p "$(dirname "$ORIGINAL")"
+        cp -p "$LINUX_GRUB" "$ORIGINAL"
+        sed -i -E "/$motif/d" "$LINUX_GRUB"
+    fi
+}
+
+if [[ $MODE == silence ]]; then
+    [[ -f "$REPERE_OFF" ]] || silence_grub
+    exit 0
+fi
+
+# Ajoute / retire des options du noyau dans /etc/default/grub
+options_noyau() {
+    local action="$1" ligne valeur o
+    ligne="$(grep -E '^GRUB_CMDLINE_LINUX_DEFAULT=' "$DEFAUT" | tail -n1)"
+    valeur="${ligne#GRUB_CMDLINE_LINUX_DEFAULT=}"; valeur="${valeur#\"}"; valeur="${valeur%\"}"
+    for o in "${OPTIONS[@]}"; do
+        if [[ $action == ajouter ]]; then
+            [[ " $valeur " == *" $o "* ]] || valeur="$valeur $o"
+        elif [[ $o != quiet ]]; then
+            valeur=" $valeur "; valeur="${valeur// $o / }"
+        fi
+    done
+    valeur="$(echo "$valeur" | xargs)"
+    if [[ -n "$ligne" ]]; then
+        sed -i -E "s|^GRUB_CMDLINE_LINUX_DEFAULT=.*|GRUB_CMDLINE_LINUX_DEFAULT=\"$valeur\"|" "$DEFAUT"
+    else
+        printf 'GRUB_CMDLINE_LINUX_DEFAULT="%s"\n' "$valeur" >> "$DEFAUT"
+    fi
+}
+
+regenerer() {
+    ((REGENERER)) || return 0
+    echo "Reconstruction de l'image de démarrage (une minute environ)…"
+    mkinitcpio -P >/dev/null 2>&1 || echo "  mkinitcpio a signalé une erreur (souvent sans gravité)."
+    if [[ -f "$DEFAUT" ]]; then
+        /usr/local/bin/pinksheep-grub --regenerer || return 1
+    fi
+}
+
+if [[ $MODE == activer ]]; then
+    command -v plymouth-set-default-theme >/dev/null || {
+        echo "Plymouth n'est pas installé : sudo pacman -S plymouth, puis relance."; exit 1; }
+    [[ -f "$SOURCE/pinksheep.plymouth" ]] || { echo "Thème introuvable ($SOURCE)."; exit 1; }
+    grep -Eq '^HOOKS=.*\b(systemd|udev)\b' "$MKINIT" || {
+        echo "$MKINIT ne ressemble pas à celui d'Arch : rien n'est modifié."; exit 1; }
+
+    rm -rf "${THEMES:?}/pinksheep"; mkdir -p "$THEMES"
+    cp -r "$SOURCE" "$THEMES/pinksheep"
+    plymouth-set-default-theme pinksheep || { echo "Impossible de choisir le thème."; exit 1; }
+
+    [[ -f "$MKINIT.avant-pinksheep" ]] || cp "$MKINIT" "$MKINIT.avant-pinksheep"
+    hooks_ont_plymouth || sed -i -E '/^HOOKS=/ s/\b(systemd|udev)\b/\1 plymouth/' "$MKINIT"
+
+    if [[ -f "$DEFAUT" ]]; then
+        options_noyau ajouter
+        silence_grub
+        mkdir -p "$(dirname "$CROCHET")"
+        cat > "$CROCHET" <<'FIN'
+# PinkSheep : garde le démarrage propre après une mise à jour de GRUB
+[Trigger]
+Operation = Install
+Operation = Upgrade
+Type = Package
+Target = grub
+
+[Action]
+Description = PinkSheep : messages « Chargement de Linux… » masqués
+When = PostTransaction
+Exec = /usr/local/bin/pinksheep-chargement --grub-silencieux
+FIN
+    else
+        echo "GRUB n'est pas utilisé : ajoute toi-même « ${OPTIONS[*]} » aux options du noyau."
+    fi
+    rm -f "$REPERE_OFF"
+    regenerer || exit 1
+    echo "Écran de chargement PinkSheep activé (visible au prochain démarrage)."
+else
+    sed -i -E '/^HOOKS=/ s/ plymouth\b//' "$MKINIT"
+    if [[ -f "$DEFAUT" ]]; then
+        options_noyau retirer
+        [[ -f "$ORIGINAL" ]] && cp -p "$ORIGINAL" "$LINUX_GRUB"
+        rm -f "$CROCHET"
+    fi
+    mkdir -p "$(dirname "$REPERE_OFF")"; touch "$REPERE_OFF"
+    regenerer || exit 1
+    echo "Écran de chargement désactivé (pour le remettre : sudo pinksheep-chargement)."
+fi

@@ -18,6 +18,7 @@ essentiel rofi
 essentiel kitty
 bonus     foot
 essentiel sddm
+essentiel plymouth
 essentiel qt6-wayland
 essentiel qt5-wayland
 bonus     hyprpolkitagent

@@ -274,6 +274,12 @@ if command -v flatpak >/dev/null; then
 fi
 
 # ────────────────────────────────────────────────────────────────
+etape "Écran de chargement au démarrage"
+# Avant le menu GRUB et l'image de démarrage, reconstruits juste après
+/usr/local/bin/pinksheep-chargement --sans-regenerer \
+    || alerte "écran de chargement non activé (messages du système gardés)"
+
+# ────────────────────────────────────────────────────────────────
 etape "Menu de démarrage (dual boot Windows)"
 if [[ -f /etc/default/grub ]]; then
     pac -S os-prober ntfs-3g || alerte "os-prober non installé"
