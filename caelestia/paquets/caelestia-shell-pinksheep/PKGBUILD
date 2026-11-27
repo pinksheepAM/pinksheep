@@ -23,7 +23,7 @@ _pkg="caelestia-shell-v${pkgver}"
 source=("${url}/releases/download/v${pkgver}/${_pkg}.tar.gz"
         'calculatrice-sans-fish.patch')
 sha256sums=('6bef9feff9f9c6afeb6fdf0b9bb1cfc3cfd7dff4c2a020e8079d6720975f3b6a'
-            'SKIP')
+            '09693e64f92ba134c4e04071114cf45b483f2a2567bd86dc272d56248afca6c1')
 
 prepare() {
     cd "$_pkg"

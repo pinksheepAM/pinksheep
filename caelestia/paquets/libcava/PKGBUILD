@@ -20,6 +20,7 @@ depends=(
     'sndio'
     'libpulse'
     'libpipewire'
+    'pipewire-jack'   # libjack.so.0 (PinkSheep utilise PipeWire)
 )
 makedepends=(
     'base-devel'

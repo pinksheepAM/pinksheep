@@ -7,3 +7,10 @@ paquets/*/*.tar.gz
 paquets/*/dots/
 paquets/*/m3shapes/
 paquets/pinksheep-caelestia/versions.conf
+# Journaux et sources téléchargées par makepkg / makechrootpkg
+paquets/*/*.log
+paquets/*/*.tar.xz
+paquets/*/*.tar.zst
+paquets/*/*.zip
+paquets/*/*.ttf
+paquets/*/*.sig

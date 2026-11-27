@@ -19,7 +19,7 @@ _archive="caelestia-${pkgver}"
 source=("${url}/releases/download/v${pkgver}/${_archive}.tar.gz"
         'caelestia-garde')
 sha256sums=('f31447efdd94a18556e338bcf8a38236f34660a56b241657817e6cbe80b067e3'
-            'SKIP')
+            '2be861e317eae3ee81a79e91373147a6d70128cf8a2c5c0e0003b2019a748f02')
 
 build() {
     cd "$_archive"

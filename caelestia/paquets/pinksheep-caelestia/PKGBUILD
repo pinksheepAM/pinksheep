@@ -20,8 +20,31 @@ source=("dots::git+https://github.com/caelestia-dots/caelestia.git#commit=${_dot
         'pinksheep-session-caelestia' 'pinksheep-caelestia-preparer'
         'pinksheep-caelestia-garde' 'pinksheep-caelestia-verifier'
         'pinksheep-caelestia.hook'
-        'versions.conf')   # recopié depuis ../../versions.conf par outils/construire-depot.sh
-sha256sums=('SKIP' 'SKIP' 'SKIP' 'SKIP' 'SKIP' 'SKIP' 'SKIP' 'SKIP' 'SKIP' 'SKIP')
+        'versions.conf'    # recopié depuis ../../versions.conf par outils/construire-depot.sh
+        # Réglages PinkSheep par défaut (copiés une fois dans ~/.config/caelestia)
+        'shell.json' 'cli.json' 'hypr-user.lua' 'hypr-vars.lua'
+        'qt6ct-pinksheep.conf' 'kitty-couleurs.conf'
+        'foot-couleurs.ini')
+sha256sums=('SKIP'
+            '1a56a41b75758511c99631f6de235ac6b17079dd09a9888331bd466d9aab0d44'
+            'bce29bd870b9e8fa0c504054498ea87066af2b94ea35e512e46902a583437c44'
+            '7c3b5797c7b91cd3ae94e5c71c886ed28fd478414a309f56a6ea6ce14c0f1108'
+            '6b14e53e6507dae8df6844bc934981beaf27edadfadf7b7c3eb6fd9c06b2412d'
+            '8b06ba1e9ee182e8b8246f3ca784dc4b670f6bf42e63d3f4a98cda5e2640a3cf'
+            '89b6a330280fde9ce1d069b56ff3204889a5cb450e32b9788db35a9ef7a874c3'
+            '2b651c8c0619e6f9122b59ad4de0230c78bba634df3181319844724c722280e3'
+            'b4de4fed20b53026cd1a23ac10c452d6d28b7b3edb39e651d3a7d836d0402cab'
+            '47fbb1e72d7eeec951dd7413d81e2be0e14241df7c2e38576ab420b9964c0a8b'
+            '917cf486bf6a5e4e82d4668712bfb0546fdac9be60af59407075c5686b93f073'
+            '2151132bd27c8e8b8285d9df893dc3073b539847e2d621f7ab50b3ec4d143c7f'
+            'c54c55dd0040bc21e3a4a2bb5ef5eb4b221450fe859050c756601d51836469f6'
+            '1ca3377b37c321e803ca743dd1be2fe412873d653276b603f7dd5e15c01604b8'
+            '9aaabdd14223eb86e4c63e35d3b362417edd8e819fc5a211695a4ae350ba4027'
+            '14c3dd10df553880dc44cd08d1920da5e7d93cd0713ce7bf194782b328d929ea'
+            '83885029ccfa56231126ac5adcf81b4a00d9c47ab61223aef33f22c3896fe539')
+makedepends=('git')
+# Empreintes des fichiers locaux : après toute modification d'un de ces fichiers
+# (ou de versions.conf), lancer « updpkgsums » dans ce dossier (paquet pacman-contrib).
 
 prepare() {
     cd dots
@@ -32,9 +55,12 @@ package() {
     local share="$pkgdir/usr/share/pinksheep/caelestia"
     install -dm755 "$share"
     cp -r dots/hypr "$share/hypr"
-    install -Dm644 dots/LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE-caelestia"
+    # Caelestia (dots) est sous GPL-3.0 : son fichier LICENSE n'existe qu'après le commit
+    # figé (ajouté le 07/10/2026) ; le texte de la GPL-3.0 est fourni par le paquet
+    # « licenses » (/usr/share/licenses/spdx/GPL-3.0-only.txt), comme pour license=().
     # Réglages PinkSheep par défaut (copiés une fois dans ~/.config/caelestia)
-    cp -r "$startdir/skel" "$share/skel"
+    install -Dm644 shell.json cli.json hypr-user.lua hypr-vars.lua -t "$share/skel"
+    install -Dm644 qt6ct-pinksheep.conf kitty-couleurs.conf foot-couleurs.ini -t "$share/skel/templates"
     install -Dm644 versions.conf "$share/versions.conf"
     # Sessions de l'écran de connexion
     install -Dm644 pinksheep-caelestia.desktop -t "$pkgdir/usr/share/wayland-sessions"

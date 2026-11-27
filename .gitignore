@@ -3,3 +3,6 @@ _construction/
 iso/
 *.iso
 *.sha256
+# Copies locales et journaux de construction
+build-atelier.sh
+*.log
