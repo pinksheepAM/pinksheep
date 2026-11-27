@@ -18,6 +18,9 @@
 set -uo pipefail
 
 DEPOT_URL="https://github.com/NischalDawadi/Hyprlust.git"
+# Version figée et relue : on n'exécute jamais « la dernière » version du dépôt de quelqu'un d'autre.
+# Pour changer de version : relire les changements, puis mettre à jour ce commit.
+HYPRLUST_COMMIT="a540db97bd9118c37cf3b3ade3bd8f3a210de126"
 PS=/usr/share/pinksheep
 DONNEES="${XDG_DATA_HOME:-$HOME/.local/share}/pinksheep"
 DEPOT="$DONNEES/hyprlust-depot"
@@ -91,11 +94,16 @@ EOF
 
     etape "Téléchargement de Hyprlust"
     mkdir -p "$DONNEES"
-    if [[ -d "$DEPOT/.git" ]]; then
-        git -C "$DEPOT" pull --ff-only -q || info "mise à jour impossible, on garde la version déjà téléchargée"
-    else
-        git clone --depth 1 -q "$DEPOT_URL" "$DEPOT" || echec "Téléchargement impossible (connexion internet ?)."
+    if [[ ! -d "$DEPOT/.git" ]]; then
+        git clone -q --no-checkout "$DEPOT_URL" "$DEPOT" || echec "Téléchargement impossible (connexion internet ?)."
     fi
+    if ! git -C "$DEPOT" cat-file -e "$HYPRLUST_COMMIT^{commit}" 2>/dev/null; then
+        git -C "$DEPOT" fetch -q origin || echec "Téléchargement impossible (connexion internet ?)."
+    fi
+    git -C "$DEPOT" -c advice.detachedHead=false checkout -q --force "$HYPRLUST_COMMIT" \
+        || echec "La version vérifiée de Hyprlust ($HYPRLUST_COMMIT) est introuvable."
+    [[ "$(git -C "$DEPOT" rev-parse HEAD)" == "$HYPRLUST_COMMIT" ]] || echec "Version de Hyprlust inattendue."
+    info "version vérifiée ${HYPRLUST_COMMIT:0:7}"
     local SRC="$DEPOT/.config"
     [[ -d "$SRC" ]] || echec "Le dépôt n'a pas la structure attendue."
 
