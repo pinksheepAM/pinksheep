@@ -273,6 +273,11 @@ if command -v flatpak >/dev/null; then
         alerte "Flathub n'a pas pu être ajouté (sans internet ?) : pinksheep-maj le refera."
 fi
 
+# Dépôt pacman PinkSheep (paquets signés : paru, Caelestia…) : activé seulement
+# quand sa clé publique existe ; sinon rien ne change
+PINKSHEEP_INSTALLATION=1 /usr/local/bin/pinksheep-depot \
+    || alerte "dépôt PinkSheep non activé : pinksheep-maj le refera"
+
 # Affichage à l'écran de Verr. Maj / Verr. Num (SwayOSD écoute le clavier)
 if [[ -f /usr/lib/systemd/system/swayosd-libinput-backend.service ]]; then
     systemctl enable swayosd-libinput-backend.service

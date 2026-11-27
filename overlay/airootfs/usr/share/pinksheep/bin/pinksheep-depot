@@ -1,0 +1,96 @@
+#!/usr/bin/env bash
+# ╭──────────────────────────────────────────────────────────────╮
+# │  PinkSheep — dépôt pacman PinkSheep (paquets signés)          │
+# │                                                              │
+# │  sudo pinksheep-depot           l'activer s'il est prêt       │
+# │  pinksheep-depot --etat         activé ou non ?               │
+# │  sudo pinksheep-depot --retirer le désactiver                 │
+# │                                                              │
+# │  Le dépôt contient les paquets construits par PinkSheep       │
+# │  (paru, puis Caelestia). pacman refuse tout paquet qui n'est  │
+# │  pas signé par LA clé PinkSheep (empreinte figée dans         │
+# │  depot.conf). Tant que la clé n'existe pas, rien ne change.   │
+# │  Le dépôt est placé APRÈS ceux d'Arch : il ne peut pas        │
+# │  remplacer un paquet officiel.                                │
+# ╰──────────────────────────────────────────────────────────────╯
+set -uo pipefail
+DOSSIER=/usr/share/pinksheep/depot
+CONF_PACMAN=/etc/pacman.conf
+DEBUT="# >>> Dépôt PinkSheep (géré par pinksheep-depot, ne pas modifier à la main)"
+FIN="# <<< Dépôt PinkSheep"
+
+MODE=activer
+case "${1:-}" in
+    "" | --activer) ;;
+    --etat) MODE=etat ;;
+    --retirer) MODE=retirer ;;
+    -h|--help) sed -n '2,15p' "$0"; exit 0 ;;
+    *) echo "Option inconnue : $1"; exit 1 ;;
+esac
+
+DEPOT_NOM=pinksheep; DEPOT_URL=""; CLE_EMPREINTE=""
+# shellcheck source=/dev/null
+[[ -f "$DOSSIER/depot.conf" ]] && source "$DOSSIER/depot.conf"
+CLE_FICHIER="$DOSSIER/$DEPOT_NOM.asc"
+
+actif() { grep -qF "$DEBUT" "$CONF_PACMAN" 2>/dev/null; }
+pret()  { [[ ${#CLE_EMPREINTE} -eq 40 && -f "$CLE_FICHIER" && -n "$DEPOT_URL" ]]; }
+
+if [[ $MODE == etat ]]; then
+    if actif; then echo "Dépôt PinkSheep : activé ($DEPOT_URL)"
+    elif pret; then echo "Dépôt PinkSheep : prêt mais pas activé (sudo pinksheep-depot)"
+    else echo "Dépôt PinkSheep : pas encore ouvert (la clé de signature n'existe pas encore)"; fi
+    exit 0
+fi
+
+[[ $EUID -eq 0 ]] || { echo "À lancer avec sudo : sudo pinksheep-depot $*"; exit 1; }
+
+retirer_bloc() { sed -i "/^$DEBUT\$/,/^$FIN\$/d" "$CONF_PACMAN"; }
+
+if [[ $MODE == retirer ]]; then
+    actif && retirer_bloc
+    echo "Dépôt PinkSheep retiré de pacman (la clé reste connue de pacman, sans effet)."
+    exit 0
+fi
+
+pret || { echo "Le dépôt PinkSheep n'est pas encore ouvert : rien à faire."; exit 0; }
+command -v pacman-key >/dev/null || { echo "pacman-key introuvable."; exit 1; }
+
+# 1. La clé publique livrée doit être EXACTEMENT celle de l'empreinte figée
+empreinte_fichier="$(gpg --show-keys --with-colons "$CLE_FICHIER" 2>/dev/null | awk -F: '/^fpr:/ {print $10; exit}')"
+if [[ "${empreinte_fichier^^}" != "${CLE_EMPREINTE^^}" ]]; then
+    echo "[!] La clé du dépôt ne correspond pas à l'empreinte attendue : dépôt NON activé."
+    echo "    attendue : $CLE_EMPREINTE"
+    echo "    trouvée  : ${empreinte_fichier:-aucune}"
+    exit 1
+fi
+
+# 2. pacman fait confiance à cette clé, et seulement pour ce qu'elle signe
+pacman-key --list-keys >/dev/null 2>&1 || pacman-key --init >/dev/null 2>&1
+if ! pacman-key --list-keys "$CLE_EMPREINTE" >/dev/null 2>&1; then
+    pacman-key --add "$CLE_FICHIER" >/dev/null 2>&1 || { echo "Impossible d'ajouter la clé à pacman."; exit 1; }
+fi
+pacman-key --lsign-key "$CLE_EMPREINTE" >/dev/null 2>&1 || { echo "Impossible de valider la clé dans pacman."; exit 1; }
+
+# 3. Le dépôt, à la fin de pacman.conf (après core/extra/multilib), signatures obligatoires
+bloc="$DEBUT
+[$DEPOT_NOM]
+SigLevel = Required DatabaseRequired
+Server = $DEPOT_URL
+$FIN"
+if actif; then
+    actuel="$(sed -n "/^$DEBUT\$/,/^$FIN\$/p" "$CONF_PACMAN")"
+    [[ "$actuel" == "$bloc" ]] || { retirer_bloc; printf '\n%s\n' "$bloc" >> "$CONF_PACMAN"; }
+else
+    [[ -f "$CONF_PACMAN.avant-pinksheep-depot" ]] || cp "$CONF_PACMAN" "$CONF_PACMAN.avant-pinksheep-depot"
+    printf '\n%s\n' "$bloc" >> "$CONF_PACMAN"
+fi
+
+# 4. paru (assistant AUR), fourni par le dépôt PinkSheep
+if [[ -d /run/systemd/system ]] || [[ -n "${PINKSHEEP_INSTALLATION:-}" ]]; then
+    # -Syu et non -Sy : jamais de mise à jour partielle (règle d'or d'Arch)
+    if pacman -Syu --needed --noconfirm "$DEPOT_NOM/paru" >/dev/null 2>&1; then
+        echo "paru installé (depuis le dépôt PinkSheep)."
+    fi
+fi
+echo "Dépôt PinkSheep activé : paquets signés uniquement."
