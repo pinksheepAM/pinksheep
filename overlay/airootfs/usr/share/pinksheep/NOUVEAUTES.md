@@ -1,5 +1,10 @@
 # Nouveautés de PinkSheep
 
+## PinkSheep 1.1.6 (28/11/2026)
+
+- Correctif : l'instantané d'avant mise à jour ne se déclenche plus (en échouant) quand tu construis un paquet ou une ISO depuis ton PC. Il ne concerne que ton système.
+- Construction de l'ISO : plus de mise à jour partielle du système, et l'en-tête de build.sh dit clairement ce qu'il installe.
+
 ## PinkSheep 1.1.5 (27/11/2026)
 
 - Affichage à l'écran : le volume, le micro, la luminosité, Verr. Maj et Verr. Num s'affichent en bas de l'écran, aux couleurs de ton fond.

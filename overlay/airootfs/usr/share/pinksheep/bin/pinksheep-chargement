@@ -17,7 +17,8 @@ MKINIT=/etc/mkinitcpio.conf
 DEFAUT=/etc/default/grub
 LINUX_GRUB=/etc/grub.d/10_linux
 ORIGINAL=/etc/pinksheep/10_linux.original
-CROCHET=/etc/pacman.d/hooks/pinksheep-grub-silencieux.hook
+# Dossier « système » des crochets : ne s'applique pas aux chroots construits depuis ce PC
+CROCHET=/usr/share/libalpm/hooks/pinksheep-grub-silencieux.hook
 REPERE_OFF=/etc/pinksheep/chargement-off
 # splash : écran de chargement ; plymouth.use-simpledrm : il s'affiche dès le début,
 # avant même le pilote graphique (NVIDIA compris), à la résolution choisie par GRUB

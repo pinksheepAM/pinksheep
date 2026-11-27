@@ -66,7 +66,7 @@ fi
 
 # 2026-11 (1.1.5) : instantané Timeshift avant chaque mise à jour
 if command -v timeshift >/dev/null; then
-    cible=/etc/pacman.d/hooks/00-pinksheep-instantane.hook
+    cible=/usr/share/libalpm/hooks/00-pinksheep-instantane.hook
     if ! cmp -s /usr/share/pinksheep/systeme/pacman/00-pinksheep-instantane.hook "$cible"; then
         install -Dm644 /usr/share/pinksheep/systeme/pacman/00-pinksheep-instantane.hook "$cible"
         [[ -f /etc/timeshift/timeshift.json ]] || /usr/local/bin/pinksheep-instantane --configurer >/dev/null
@@ -85,3 +85,13 @@ if command -v flatpak >/dev/null && [[ ! -f /etc/pinksheep/heroic-installe ]]; t
         echo "   -> Heroic n'a pas pu être installé (connexion ?) : ce sera retenté à la prochaine mise à jour"
     fi
 fi
+
+# 2026-11 (1.1.6) : les crochets pacman PinkSheep passent de /etc/pacman.d/hooks
+# (lu aussi quand on construit un chroot ou une ISO depuis ce PC, où ils échouaient)
+# à /usr/share/libalpm/hooks (propre à ce système seulement)
+for c in 00-pinksheep-instantane.hook pinksheep-grub-silencieux.hook; do
+    if [[ -f /etc/pacman.d/hooks/$c ]]; then
+        [[ -f /usr/share/libalpm/hooks/$c ]] || install -Dm644 "/etc/pacman.d/hooks/$c" "/usr/share/libalpm/hooks/$c"
+        rm -f "/etc/pacman.d/hooks/$c"
+    fi
+done
