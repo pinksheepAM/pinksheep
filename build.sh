@@ -173,6 +173,7 @@ file_permissions+=(
   ["/usr/local/bin/pinksheep-install"]="0:0:755"
   ["/usr/local/bin/pinksheep-demarrage"]="0:0:755"
   ["/usr/local/bin/pinksheep-graphique"]="0:0:755"
+  ["/usr/local/bin/pinksheep-wifi"]="0:0:755"
   ["/usr/share/pinksheep/setup.sh"]="0:0:755"
 )
 EOF

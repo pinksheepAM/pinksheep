@@ -257,6 +257,22 @@ systemctl enable power-profiles-daemon.service 2>/dev/null || true
 # systemd-resolved ; on l'active pour que le DNS marche dans tous les cas
 systemctl enable systemd-resolved.service
 
+# Bluetooth : pas d'« A2DP duplex », qui rend certaines enceintes muettes
+install -Dm644 "$PINKSHEEP_DIR/systeme/wireplumber/51-pinksheep-bluetooth.conf" \
+    /etc/wireplumber/wireplumber.conf.d/51-pinksheep-bluetooth.conf
+
+# Pare-feu : tout ce qui sort est permis, rien n'entre sans y être invité
+if command -v ufw >/dev/null; then
+    sed -i 's/^ENABLED=.*/ENABLED=yes/' /etc/ufw/ufw.conf
+    systemctl enable ufw.service
+fi
+
+# Boutique d'applis (Discover) : le catalogue Flathub
+if command -v flatpak >/dev/null; then
+    flatpak remote-add --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo || \
+        alerte "Flathub n'a pas pu être ajouté (sans internet ?) : pinksheep-maj le refera."
+fi
+
 # ────────────────────────────────────────────────────────────────
 etape "Menu de démarrage (dual boot Windows)"
 if [[ -f /etc/default/grub ]]; then

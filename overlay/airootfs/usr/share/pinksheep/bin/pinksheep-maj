@@ -54,31 +54,58 @@ HYPRLUST=(waybar rofi swaync wlogout kitty fastfetch rmpc yazi btop zathura nvim
 depot_url() { cat "$ETC/depot" 2>/dev/null || cat "$PS/depot.conf" 2>/dev/null; }
 
 # ── Récupérer la nouvelle version ─────────────────────────────
+# Avant de télécharger : internet marche-t-il, et la traduction des adresses (DNS) aussi ?
+# Si seul le DNS est en panne (cas d'une ISO d'avant la 1.1), on le répare tout seul.
+verifier_reseau() {
+    local hote
+    hote="$(depot_url | sed -E 's#^[a-z+]+://([^/:]+).*#\1#')"
+    [[ -n "$hote" ]] || hote=github.com
+    getent hosts "$hote" >/dev/null 2>&1 && return 0
+    if curl -s --max-time 6 -o /dev/null http://1.1.1.1; then
+        alerte "Internet marche, mais pas la traduction des adresses (DNS) : réparation…"
+        $SUDO systemctl enable --now systemd-resolved.service >/dev/null 2>&1
+        for _ in 1 2 3 4 5; do
+            sleep 2
+            getent hosts "$hote" >/dev/null 2>&1 && { info "DNS réparé"; return 0; }
+        done
+        echec "Le DNS est toujours en panne. Redémarre le PC, puis relance pinksheep-maj.
+    Si ça continue, envoie le résultat de :  ls -l /etc/resolv.conf ; resolvectl status"
+    fi
+    echec "Pas de connexion internet.
+    Connecte-toi (icône réseau en haut à droite, ou la commande  nmtui ), puis relance pinksheep-maj."
+}
+
 recuperer_git() {
     local url; url="$(depot_url)"
     [[ -n "$url" ]] || echec "Aucun dépôt configuré. Utilise : pinksheep-maj --depot https://github.com/TON_NOM/pinksheep.git"
+    verifier_reseau
     mkdir -p "$DONNEES"
+    ERREUR_GIT="$(mktemp)"
     if [[ -d "$SOURCE/.git" ]]; then
         git -C "$SOURCE" remote set-url origin "$url"
-        git -C "$SOURCE" fetch -q origin || erreur_git
-        git -C "$SOURCE" reset -q --hard "origin/$(git -C "$SOURCE" rev-parse --abbrev-ref HEAD)" || erreur_git
+        git -C "$SOURCE" fetch -q origin 2>"$ERREUR_GIT" || erreur_git
+        git -C "$SOURCE" reset -q --hard "origin/$(git -C "$SOURCE" rev-parse --abbrev-ref HEAD)" 2>"$ERREUR_GIT" || erreur_git
     else
         rm -rf "$SOURCE"
-        git clone -q "$url" "$SOURCE" || erreur_git
+        git clone -q "$url" "$SOURCE" 2>"$ERREUR_GIT" || erreur_git
     fi
+    rm -f "$ERREUR_GIT"
     VERSION="$(git -C "$SOURCE" log -1 --format='%h — %s (%cd)' --date=format:'%d/%m/%Y')"
     NOUVEAU="$SOURCE/overlay/airootfs/usr/share/pinksheep"
 }
 
 erreur_git() {
+    printf '\n%s[X] Impossible de récupérer PinkSheep depuis %s%s\n' "$ROUGE" "$(depot_url)" "$RAZ"
+    if [[ -s "${ERREUR_GIT:-}" ]]; then
+        printf '    Message de git :\n'
+        sed 's/^/      /' "$ERREUR_GIT" | tail -n 5
+    fi
     cat <<EOF
 
-${ROUGE}[X] Impossible de récupérer le dépôt PinkSheep.${RAZ}
-    Si le dépôt est privé, connecte ton compte GitHub une fois pour toutes :
-        sudo pacman -S --needed github-cli
-        gh auth login        (choisis GitHub.com, HTTPS, puis connexion par navigateur)
-        gh auth setup-git
-    puis relance  pinksheep-maj
+    Pistes :
+      - le site GitHub est peut-être indisponible : réessaie dans quelques minutes ;
+      - si tu as modifié des fichiers dans $SOURCE, supprime ce dossier
+        (rm -rf "$SOURCE") puis relance pinksheep-maj.
 EOF
     exit 1
 }
@@ -233,14 +260,24 @@ trap 'rm -rf "$ANCIEN"' EXIT
 [[ -d "$PS/skel" ]] && cp -a "$PS/skel/." "$ANCIEN/"
 
 maj_systeme
+[[ -z "${PINKSHEEP_SANS_PAQUETS:-}" ]] && maj_paquets
 if [[ -f "$PS/correctifs.sh" && -z "$RACINE" ]]; then
     etape "Correctifs système"
     $SUDO bash "$PS/correctifs.sh" || alerte "un correctif a échoué"
 fi
-[[ -z "${PINKSHEEP_SANS_PAQUETS:-}" ]] && maj_paquets
 maj_configs "$ANCIEN"
 regenerer
 printf '%s\n' "$VERSION" | $SUDO tee "$ETC/version" >/dev/null
 
-printf '\n%sPinkSheep est à jour.%s 🐑\n' "$VERT" "$RAZ"
+# Nouvelle version de PinkSheep ? On affiche ses nouveautés une fois.
+nouvelle="$(cat "$PS/VERSION_PINKSHEEP" 2>/dev/null)"
+ancienne="$(cat "$ETC/version-pinksheep" 2>/dev/null)"
+if [[ -n "$nouvelle" && "$nouvelle" != "$ancienne" && -f "$PS/NOUVEAUTES.md" ]]; then
+    printf '\n%s:: Nouveautés de PinkSheep %s%s\n' "$ROSE" "$nouvelle" "$RAZ"
+    awk -v v="## PinkSheep $nouvelle" '$0 ~ "^## " { dedans = ($0 == v || index($0, v " ") == 1) ; next } dedans' \
+        "$PS/NOUVEAUTES.md" | sed '/^$/d; s/^/   /'
+    printf '%s\n' "$nouvelle" | $SUDO tee "$ETC/version-pinksheep" >/dev/null
+fi
+
+printf '\n%sPinkSheep %s est à jour.%s 🐑\n' "$VERT" "$(cat "$PS/VERSION_PINKSHEEP" 2>/dev/null)" "$RAZ"
 printf '   Certaines nouveautés (barre, écran de connexion) s'"'"'appliquent à la prochaine connexion.\n\n'

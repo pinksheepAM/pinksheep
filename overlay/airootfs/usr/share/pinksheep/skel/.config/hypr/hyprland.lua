@@ -341,7 +341,7 @@ hl.window_rule({
 -- Aide-mémoire et gestionnaire des tâches
 hl.window_rule({
     name   = "aide-pinksheep",
-    match  = { class = "^(pinksheep-aide|pinksheep-btop)$" },
+    match  = { class = "^(pinksheep-aide|pinksheep-btop|pinksheep-maj)$" },
     float  = true,
     center = true,
     size   = "1000 700",
