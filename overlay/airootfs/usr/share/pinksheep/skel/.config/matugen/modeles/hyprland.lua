@@ -19,3 +19,13 @@ hl.config({
         },
     },
 })
+
+-- Couleurs des barres de titre des fenêtres (fenetres.lua, boutons hyprbars)
+pinksheep_couleurs = {
+    barre    = "rgba({{colors.surface_container.default.hex_stripped}}ee)",
+    texte    = "rgb({{colors.on_surface.default.hex_stripped}})",
+    fermer   = "rgb({{colors.primary.default.hex_stripped}})",
+    agrandir = "rgb({{colors.tertiary.default.hex_stripped}})",
+    reduire  = "rgb({{colors.secondary.default.hex_stripped}})",
+    symbole  = "rgb({{colors.on_primary.default.hex_stripped}})",
+}

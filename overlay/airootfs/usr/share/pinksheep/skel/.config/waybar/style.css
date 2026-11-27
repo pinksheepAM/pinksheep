@@ -43,7 +43,17 @@ tooltip {
 #workspaces button.urgent { color: @sur_primaire; background: @erreur; }
 #workspaces button:hover  { background: alpha(@primaire, 0.2); color: @primaire; }
 
-#window { color: @discret; padding: 0 10px; }
+/* Barre des tâches : l'appli active est soulignée de rose */
+#taskbar { margin: 4px 6px; }
+#taskbar button {
+    padding: 0 6px;
+    margin: 0 2px;
+    border-radius: 9px;
+    background: transparent;
+    border-bottom: 2px solid transparent;
+}
+#taskbar button:hover  { background: alpha(@primaire, 0.18); }
+#taskbar button.active { background: alpha(@primaire, 0.22); border-bottom: 2px solid @primaire; }
 
 #clock {
     color: @primaire;
