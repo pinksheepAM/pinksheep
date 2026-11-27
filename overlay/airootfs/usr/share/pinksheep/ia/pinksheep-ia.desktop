@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=Assistant PinkSheep
+Comment=Demande à l'IA d'ouvrir un fichier, de lancer une appli, de régler le son…
+Exec=pinksheep-ia
+Icon=/usr/share/pinksheep/ia/pinksheep_ia/mouton.png
+Terminal=false
+Categories=Utility;
+Keywords=ia;assistant;ai;chat;
+StartupWMClass=pinksheep-ia

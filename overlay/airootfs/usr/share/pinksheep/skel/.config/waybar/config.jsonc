@@ -14,8 +14,9 @@
 
     "custom/logo": {
         "format": "🐑",
-        "tooltip-format": "Applications (SUPER + Espace)\nClic droit : aide des raccourcis",
+        "tooltip-format": "Applications (SUPER + Espace)\nClic du milieu : assistant IA (SUPER + A)\nClic droit : aide des raccourcis",
         "on-click": "rofi -show drun",
+        "on-click-middle": "pinksheep-ia",
         "on-click-right": "pinksheep-aide"
     },
 

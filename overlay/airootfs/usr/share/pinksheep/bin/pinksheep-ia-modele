@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+# PinkSheep — télécharge le modèle de l'assistant en arrière-plan, après l'installation.
+# Lancé par le service utilisateur pinksheep-ia-modele (basse priorité). État :
+#   ~/.local/state/pinksheep/ia-modele.json   (pinksheep-ia --etat)
+set -uo pipefail
+PROFIL=/etc/pinksheep/ia.json
+ETAT="${XDG_STATE_HOME:-$HOME/.local/state}/pinksheep/ia-modele.json"
+mkdir -p "$(dirname "$ETAT")"
+
+noter() { printf '{"etat": "%s", "quand": "%s", "detail": "%s"}\n' "$1" "$(date '+%d/%m %H:%M')" "${2:-}" > "$ETAT"; }
+
+modele="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1])).get("modele") or "")' "$PROFIL" 2>/dev/null)"
+[[ -n "$modele" ]] || { noter "desactive" "assistant désactivé sur ce PC"; exit 0; }
+command -v ollama >/dev/null || { noter "erreur" "ollama absent"; exit 1; }
+
+# Le moteur doit répondre (service système ollama)
+for _ in $(seq 1 30); do ollama list >/dev/null 2>&1 && break; sleep 2; done
+if ollama list 2>/dev/null | awk 'NR>1 {print $1}' | grep -qx -e "$modele" -e "$modele:latest"; then
+    noter "pret" "$modele"
+    exit 0
+fi
+noter "telechargement" "$modele"
+if ollama pull "$modele" >/dev/null 2>&1; then
+    noter "pret" "$modele"
+    command -v notify-send >/dev/null && notify-send -a PinkSheep -i dialog-information \
+        "Assistant PinkSheep prêt" "SUPER + A pour lui parler." 2>/dev/null
+else
+    noter "erreur" "téléchargement interrompu, nouvel essai plus tard"
+    exit 1          # le service réessaie (Restart=on-failure)
+fi
