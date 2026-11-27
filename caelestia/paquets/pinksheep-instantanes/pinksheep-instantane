@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+# PinkSheep — crée un instantané Timeshift (rsync). Ne bloque JAMAIS pacman :
+# en cas de souci, il prévient et sort sans erreur.
+#   pinksheep-instantane avant-pacman   (appelé par le crochet pacman)
+#   pinksheep-instantane                (à la main)
+MIN_INTERVALLE=3600                   # pas plus d'un instantané automatique par heure
+REPERE=/var/lib/pinksheep/dernier-instantane
+
+[[ $EUID -eq 0 ]] || { echo "À lancer avec sudo."; exit 0; }
+# Pendant l'installation (chroot), pas d'instantané
+[[ -d /run/systemd/system ]] || exit 0
+if [[ ! -f /etc/timeshift/timeshift.json ]]; then
+    echo "   (Timeshift n'est pas encore configuré : lance « sudo timeshift-gtk » une fois, mode RSYNC)"
+    exit 0
+fi
+if [[ "${1:-}" == avant-pacman && -f "$REPERE" ]]; then
+    (( $(date +%s) - $(stat -c %Y "$REPERE") < MIN_INTERVALLE )) && { echo "   (instantané récent conservé)"; exit 0; }
+fi
+mkdir -p /var/lib/pinksheep
+if timeshift --create --scripted --tags O --comments "PinkSheep : avant mise à jour $(date '+%d/%m %H:%M')" >/tmp/pinksheep-instantane.log 2>&1; then
+    touch "$REPERE"
+    echo "   Instantané créé (pour revenir en arrière : sudo timeshift --restore)"
+else
+    echo "   [!] L'instantané a échoué (voir /tmp/pinksheep-instantane.log) — la mise à jour continue."
+fi
+exit 0

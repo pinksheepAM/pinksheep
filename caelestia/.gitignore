@@ -1,0 +1,9 @@
+# Produits par outils/construire-depot.sh
+_depot/
+paquets/*/src/
+paquets/*/pkg/
+paquets/*/*.pkg.tar.zst
+paquets/*/*.tar.gz
+paquets/*/dots/
+paquets/*/m3shapes/
+paquets/pinksheep-caelestia/versions.conf

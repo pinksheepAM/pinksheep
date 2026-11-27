@@ -1,0 +1,17 @@
+# PinkSheep — un instantané du système avant chaque mise à jour (Timeshift, mode rsync,
+# compatible ext4). Permet de revenir en arrière si une mise à jour casse quelque chose.
+pkgname=pinksheep-instantanes
+pkgver=1
+pkgrel=1
+pkgdesc='Instantané Timeshift automatique avant chaque transaction pacman'
+arch=('any')
+url='https://github.com/pinksheepAM/pinksheep'
+license=('GPL-3.0-only')
+depends=('timeshift' 'rsync')
+source=('00-pinksheep-instantane.hook' 'pinksheep-instantane')
+sha256sums=('SKIP' 'SKIP')
+
+package() {
+    install -Dm644 00-pinksheep-instantane.hook -t "$pkgdir/usr/share/libalpm/hooks"
+    install -Dm755 pinksheep-instantane -t "$pkgdir/usr/bin"
+}

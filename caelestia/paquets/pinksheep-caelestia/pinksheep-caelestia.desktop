@@ -1,0 +1,6 @@
+[Desktop Entry]
+Name=PinkSheep (Caelestia)
+Comment=Bureau PinkSheep avec le shell Caelestia
+Exec=/usr/bin/pinksheep-session-caelestia
+Type=Application
+DesktopNames=Hyprland

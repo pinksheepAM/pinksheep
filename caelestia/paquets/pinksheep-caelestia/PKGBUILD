@@ -1,0 +1,49 @@
+# PinkSheep — intégration de Caelestia : config Hyprland figée, session dédiée,
+# garde-fou de démarrage, vérification après mise à jour, réglages PinkSheep.
+pkgname=pinksheep-caelestia
+pkgver=2026.09
+pkgrel=1
+pkgdesc='Session PinkSheep basée sur Caelestia, avec repli automatique sur la session classique'
+arch=('any')
+url='https://github.com/pinksheepAM/pinksheep'
+license=('GPL-3.0-only')
+_dots_commit=d459e9182ae55ba7eb29fa90781297224911d6bd
+depends=('caelestia-shell-pinksheep=2.5.0' 'caelestia-cli-pinksheep=1.1.3' 'quickshell>=0.3.2'
+         'hyprland' 'hyprpolkitagent' 'gnome-keyring' 'cliphist' 'wl-clipboard' 'trash-cli'
+         'gammastep' 'geoclue' 'bluez-utils' 'adw-gtk-theme' 'papirus-icon-theme' 'qt6ct'
+         'xdg-user-dirs' 'libnotify' 'jq')
+optdepends=('pinksheep-instantanes: instantané Timeshift avant chaque mise à jour')
+backup=()
+install=pinksheep-caelestia.install
+source=("dots::git+https://github.com/caelestia-dots/caelestia.git#commit=${_dots_commit}"
+        'chemins-pinksheep.patch'
+        'pinksheep-caelestia.desktop' 'pinksheep-classique.desktop'
+        'pinksheep-session-caelestia' 'pinksheep-caelestia-preparer'
+        'pinksheep-caelestia-garde' 'pinksheep-caelestia-verifier'
+        'pinksheep-caelestia.hook'
+        'versions.conf')   # recopié depuis ../../versions.conf par outils/construire-depot.sh
+sha256sums=('SKIP' 'SKIP' 'SKIP' 'SKIP' 'SKIP' 'SKIP' 'SKIP' 'SKIP' 'SKIP' 'SKIP')
+
+prepare() {
+    cd dots
+    patch -Np1 -i "$srcdir/chemins-pinksheep.patch"
+}
+
+package() {
+    local share="$pkgdir/usr/share/pinksheep/caelestia"
+    install -dm755 "$share"
+    cp -r dots/hypr "$share/hypr"
+    install -Dm644 dots/LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE-caelestia"
+    # Réglages PinkSheep par défaut (copiés une fois dans ~/.config/caelestia)
+    cp -r "$startdir/skel" "$share/skel"
+    install -Dm644 versions.conf "$share/versions.conf"
+    # Sessions de l'écran de connexion
+    install -Dm644 pinksheep-caelestia.desktop -t "$pkgdir/usr/share/wayland-sessions"
+    install -Dm644 pinksheep-classique.desktop -t "$pkgdir/usr/share/wayland-sessions"
+    # Scripts
+    install -Dm755 pinksheep-session-caelestia pinksheep-caelestia-preparer \
+        pinksheep-caelestia-garde pinksheep-caelestia-verifier -t "$pkgdir/usr/bin"
+    # Vérification automatique après les mises à jour sensibles
+    install -Dm644 pinksheep-caelestia.hook -t "$pkgdir/usr/share/libalpm/hooks"
+    install -dm755 "$pkgdir/var/lib/pinksheep"
+}

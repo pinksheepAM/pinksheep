@@ -1,0 +1,34 @@
+#!/usr/bin/env bash
+# ╭──────────────────────────────────────────────────────────────╮
+# │  PinkSheep — lance la session Caelestia                       │
+# │  Si Caelestia n'est pas en état de marche (mise à jour de Qt  │
+# │  ou de Python pas encore suivie…), on ouvre la session        │
+# │  classique à la place : jamais d'écran noir.                  │
+# ╰──────────────────────────────────────────────────────────────╯
+CONF=/usr/share/pinksheep/caelestia/hypr/hyprland.lua
+ETAT="${XDG_STATE_HOME:-$HOME/.local/state}/pinksheep"
+mkdir -p "$ETAT"
+JOURNAL="$ETAT/session-caelestia.log"
+exec >>"$JOURNAL" 2>&1
+echo "== $(date '+%F %T') ouverture de la session Caelestia"
+
+# Pilote graphique (même logique que la session classique)
+if [[ "$(cat /etc/pinksheep/gpu 2>/dev/null)" == nvidia ]]; then
+    export LIBVA_DRIVER_NAME=nvidia __GLX_VENDOR_LIBRARY_NAME=nvidia NVD_BACKEND=direct
+fi
+export PINKSHEEP_SESSION=caelestia
+
+lancer() {
+    if command -v start-hyprland >/dev/null; then exec start-hyprland -- "$@"; fi
+    exec Hyprland "$@"
+}
+
+if ! /usr/bin/pinksheep-caelestia-verifier --rapide; then
+    echo "!! Caelestia n'est pas en état de marche : session classique à la place"
+    printf '%s\n' "Caelestia n'a pas démarré (vérification échouée le $(date '+%d/%m à %H:%M')). Détails : $JOURNAL" \
+        > "$ETAT/caelestia-repli"
+    lancer
+fi
+
+/usr/bin/pinksheep-caelestia-preparer
+lancer -c "$CONF"

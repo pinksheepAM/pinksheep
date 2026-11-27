@@ -1,0 +1,37 @@
+{
+    "general": {
+        "apps": {
+            "terminal": [
+                "pinksheep-terminal"
+            ],
+            "audio": [
+                "pavucontrol"
+            ],
+            "playback": [
+                "mpv"
+            ],
+            "explorer": [
+                "dolphin"
+            ]
+        },
+        "idle": {
+            "lockBeforeSleep": true,
+            "inhibitWhenAudio": true,
+            "inhibitWhenCharging": false,
+            "timeouts": [
+                {
+                    "timeout": 600,
+                    "idleAction": "lock"
+                },
+                {
+                    "timeout": 660,
+                    "idleAction": "dpms off",
+                    "returnAction": "dpms on"
+                }
+            ]
+        }
+    },
+    "paths": {
+        "wallpaperDir": "~/Images/FondsEcran"
+    }
+}

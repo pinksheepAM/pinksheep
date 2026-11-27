@@ -1,0 +1,48 @@
+# PinkSheep — shell Caelestia, version figée.
+# Différences avec l'AUR :
+#  - dépend du Quickshell OFFICIEL d'Arch (>= 0.3.2) au lieu de quickshell-git :
+#    Arch le recompile lui-même à chaque mise à jour de Qt ;
+#  - pas de fish (seule la calculatrice du lanceur s'en sert : on la redirige vers bash) ;
+#  - qt6-multimedia ajouté (demandé par le README, oublié dans la recette AUR).
+pkgname=caelestia-shell-pinksheep
+pkgver=2.5.0
+pkgrel=1
+pkgdesc='Shell de bureau Caelestia (version figée pour PinkSheep)'
+arch=('x86_64')
+url='https://github.com/caelestia-dots/shell'
+license=('GPL-3.0-only')
+depends=('caelestia-cli-pinksheep' 'quickshell>=0.3.2' 'qt6-m3shapes-pinksheep'
+         'glibc' 'gcc-libs' 'ddcutil' 'brightnessctl' 'libcava' 'networkmanager'
+         'lm_sensors' 'aubio' 'libpipewire' 'libqalculate' 'power-profiles-daemon'
+         'ttf-material-symbols-variable' 'ttf-rubik-vf' 'ttf-cascadia-code-nerd'
+         'qt6-base' 'qt6-declarative' 'qt6-imageformats' 'qt6-multimedia' 'swappy' 'bash')
+makedepends=('cmake' 'ninja' 'qt6-shadertools')
+provides=("caelestia-shell=${pkgver}")
+conflicts=('caelestia-shell' 'caelestia-shell-git')
+_pkg="caelestia-shell-v${pkgver}"
+source=("${url}/releases/download/v${pkgver}/${_pkg}.tar.gz"
+        'calculatrice-sans-fish.patch')
+sha256sums=('6bef9feff9f9c6afeb6fdf0b9bb1cfc3cfd7dff4c2a020e8079d6720975f3b6a'
+            'SKIP')
+
+prepare() {
+    cd "$_pkg"
+    patch -Np1 -i "$srcdir/calculatrice-sans-fish.patch"
+}
+
+build() {
+    cd "$_pkg"
+    cmake -B build -G Ninja \
+        -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+        -DCMAKE_INSTALL_PREFIX=/ \
+        -DVERSION="$pkgver" \
+        -DGIT_REVISION="$(cat REVISION)" \
+        -DDISTRIBUTOR="PinkSheep (paquet : ${pkgname})"
+    cmake --build build
+}
+
+package() {
+    cd "$_pkg"
+    DESTDIR="$pkgdir" cmake --install build
+    install -Dm644 LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+}

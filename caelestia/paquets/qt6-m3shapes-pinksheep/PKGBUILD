@@ -1,0 +1,26 @@
+# PinkSheep — m3shapes figé sur un commit précis (l'AUR ne propose que la version « git »)
+pkgname=qt6-m3shapes-pinksheep
+_commit=32ad9ce328bb77ed349b40a3be10ee9ea610b8ab
+pkgver=0.r38.g32ad9ce
+pkgrel=1
+pkgdesc='Formes Material 3 Expressive pour Qt 6 (version figée pour PinkSheep)'
+arch=('x86_64')
+url='https://github.com/soramanew/m3shapes'
+license=('Apache-2.0')
+depends=('qt6-base' 'qt6-declarative')
+makedepends=('git' 'cmake' 'ninja' 'qt6-shadertools')
+provides=('qt6-m3shapes')
+conflicts=('qt6-m3shapes' 'qt6-m3shapes-git')
+source=("m3shapes::git+${url}.git#commit=${_commit}")
+sha256sums=('SKIP')   # le commit complet garantit le contenu
+
+build() {
+    # Préfixe « / » voulu : le projet ajoute lui-même usr/lib/qt6/qml
+    cmake -S m3shapes -B build -G Ninja -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_INSTALL_PREFIX=/
+    cmake --build build
+}
+
+package() {
+    DESTDIR="$pkgdir" cmake --install build
+    install -Dm644 m3shapes/LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+}

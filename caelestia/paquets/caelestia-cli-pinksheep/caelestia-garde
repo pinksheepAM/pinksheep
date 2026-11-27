@@ -1,0 +1,10 @@
+#!/bin/sh
+# PinkSheep — garde-fou devant la CLI Caelestia
+case "$1" in
+    install|update)
+        echo "PinkSheep : « caelestia $1 » est désactivé ici." >&2
+        echo "  Caelestia est géré par PinkSheep, en versions figées et testées." >&2
+        echo "  Pour tout mettre à jour : pinksheep-maj" >&2
+        exit 1 ;;
+esac
+exec /usr/lib/caelestia-cli/caelestia "$@"

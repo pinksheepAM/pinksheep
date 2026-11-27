@@ -1,0 +1,72 @@
+#!/usr/bin/env bash
+# ╭──────────────────────────────────────────────────────────────╮
+# │  PinkSheep — Caelestia est-il en état de marche ?             │
+# │  --rapide   à l'ouverture de session (quelques dixièmes de s) │
+# │  --pacman   après une mise à jour (lancé par le crochet)      │
+# │  (rien)     rapport complet, pour les tests                   │
+# │  Code de sortie : 0 = tout va bien, 1 = Caelestia est cassé.  │
+# ╰──────────────────────────────────────────────────────────────╯
+MODE="${1:-complet}"
+PROBLEMES=()
+AVERTISSEMENTS=()
+probleme()      { PROBLEMES+=("$1"); }
+avertissement() { AVERTISSEMENTS+=("$1"); }
+
+# 1. Les programmes sont là
+for c in qs caelestia Hyprland; do
+    command -v "$c" >/dev/null || probleme "programme absent : $c"
+done
+
+# 2. Quickshell est compatible avec le Qt installé (Quickshell utilise l'API privée de Qt)
+if command -v qs >/dev/null && ! qs --private-check-compat >/dev/null 2>&1; then
+    probleme "Quickshell n'est pas compatible avec la version de Qt installée"
+fi
+
+# 3. La partie Python marche avec le Python installé (casse à chaque Python 3.x+1)
+if ! /usr/bin/python3 -c 'import caelestia, materialyoucolor' >/dev/null 2>&1; then
+    probleme "caelestia-cli ou python-materialyoucolor ne marche pas avec $(python3 --version 2>&1)"
+fi
+
+# 4. Les bibliothèques compilées trouvent toutes leurs dépendances
+for f in /usr/lib/qt6/qml/Caelestia /usr/lib/qt6/qml/M3Shapes /usr/lib/libcava.so*; do
+    [[ -e "$f" ]] || continue
+    while IFS= read -r so; do
+        manque="$(ldd "$so" 2>/dev/null | awk '/not found/ {print $1}' | tr '\n' ' ')"
+        [[ -n "$manque" ]] && probleme "$(basename "$so") : bibliothèque manquante ($manque)"
+    done < <(find "$f" -name '*.so*' -type f 2>/dev/null)
+done
+
+# 5. (complet / pacman) Versions plus récentes que celles testées : simple avertissement
+if [[ "$MODE" != --rapide ]]; then
+    teste="$(grep -m1 '^QUICKSHELL_TESTE=' /usr/share/pinksheep/caelestia/versions.conf 2>/dev/null | cut -d= -f2 | cut -d' ' -f1)"
+    actuel="$(pacman -Q quickshell 2>/dev/null | awk '{print $2}' | cut -d- -f1)"
+    if [[ -n "$teste" && -n "$actuel" ]] && [[ "$(printf '%s\n%s\n' "$teste" "$actuel" | sort -V | tail -1)" != "$teste" ]]; then
+        avertissement "Quickshell $actuel est plus récent que la version testée ($teste)"
+    fi
+fi
+
+# Résultat
+case "$MODE" in
+    --rapide)
+        printf '%s\n' "${PROBLEMES[@]}" >&2 ;;
+    --pacman)
+        if ((${#PROBLEMES[@]})); then
+            echo ":: [PinkSheep] Caelestia doit être reconstruit pour cette mise à jour :"
+            printf '   - %s\n' "${PROBLEMES[@]}"
+            echo "   En attendant, la session « PinkSheep classique » s'ouvrira automatiquement."
+            echo "   Rien d'autre à faire : relance « pinksheep-maj » dans un jour ou deux."
+            printf '%s\n' "${PROBLEMES[@]}" > /var/lib/pinksheep/caelestia-casse
+        else
+            rm -f /var/lib/pinksheep/caelestia-casse
+        fi
+        ((${#AVERTISSEMENTS[@]})) && printf ':: [PinkSheep] Attention : %s\n' "${AVERTISSEMENTS[@]}" ;;
+    *)
+        echo "Vérification de Caelestia ($(date '+%d/%m/%Y %H:%M'))"
+        for c in quickshell qt6-base python hyprland caelestia-shell-pinksheep caelestia-cli-pinksheep qt6-m3shapes-pinksheep; do
+            printf '  %-28s %s\n' "$c" "$(pacman -Q "$c" 2>/dev/null | awk '{print $2}')"
+        done
+        ((${#PROBLEMES[@]})) && printf '  [X] %s\n' "${PROBLEMES[@]}"
+        ((${#AVERTISSEMENTS[@]})) && printf '  [!] %s\n' "${AVERTISSEMENTS[@]}"
+        ((${#PROBLEMES[@]})) || echo "  [ok] Caelestia est en état de marche" ;;
+esac
+((${#PROBLEMES[@]} == 0))

@@ -1,0 +1,9 @@
+post_install() {
+    echo ":: Session « PinkSheep (Caelestia) » installée."
+    echo "   Déconnecte-toi, puis choisis-la en bas de l'écran de connexion."
+    echo "   La session « PinkSheep classique » reste disponible en secours."
+    /usr/bin/pinksheep-caelestia-verifier --pacman || true
+}
+post_upgrade() {
+    /usr/bin/pinksheep-caelestia-verifier --pacman || true
+}

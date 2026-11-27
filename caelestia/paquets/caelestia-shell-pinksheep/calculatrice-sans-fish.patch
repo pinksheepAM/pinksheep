@@ -1,0 +1,11 @@
+--- a/modules/launcher/items/CalcItem.qml	2026-11-27 00:31:16.263775544 +0000
++++ b/modules/launcher/items/CalcItem.qml	2026-11-27 00:31:16.298789803 +0000
+@@ -79,7 +79,7 @@
+                 id: stateLayer
+ 
+                 onClicked: {
+-                    Quickshell.execDetached([...GlobalConfig.general.apps.terminal, "fish", "-C", `exec qalc -i '${root.math}'`]);
++                    Quickshell.execDetached([...GlobalConfig.general.apps.terminal, "bash", "-c", `exec qalc -i '${root.math}'`]);
+                     root.list.screenState.launcher = false;
+                 }
+ 

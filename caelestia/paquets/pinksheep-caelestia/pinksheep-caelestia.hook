@@ -1,0 +1,26 @@
+# PinkSheep — après une mise à jour qui peut casser Caelestia, on vérifie.
+# Si c'est cassé, la session classique s'ouvrira automatiquement à la place.
+[Trigger]
+Operation = Install
+Operation = Upgrade
+Type = Package
+Target = qt6-base
+Target = qt6-declarative
+Target = qt6-wayland
+Target = quickshell
+Target = python
+Target = hyprland
+Target = fftw
+Target = iniparser
+Target = libpipewire
+Target = libqalculate
+Target = aubio
+Target = caelestia-*
+Target = qt6-m3shapes-pinksheep
+Target = python-materialyoucolor
+Target = libcava
+
+[Action]
+Description = [PinkSheep] Vérification de Caelestia après la mise à jour…
+When = PostTransaction
+Exec = /usr/bin/pinksheep-caelestia-verifier --pacman

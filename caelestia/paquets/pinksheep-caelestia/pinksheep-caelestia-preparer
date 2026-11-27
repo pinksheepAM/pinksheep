@@ -1,0 +1,35 @@
+#!/usr/bin/env bash
+# PinkSheep — prépare les fichiers de l'utilisateur pour Caelestia.
+# Lancé à chaque ouverture de session ; ne remplace jamais un fichier existant.
+set -u
+SRC=/usr/share/pinksheep/caelestia
+CFG="${XDG_CONFIG_HOME:-$HOME/.config}"
+THEME="${XDG_STATE_HOME:-$HOME/.local/state}/caelestia/theme"
+
+mkdir -p "$CFG/caelestia/templates" "$CFG/hypr/scheme"
+for f in hypr-vars.lua hypr-user.lua shell.json cli.json; do
+    [[ -e "$CFG/caelestia/$f" ]] || cp "$SRC/skel/$f" "$CFG/caelestia/$f"
+done
+for f in "$SRC"/skel/templates/*; do
+    [[ -e "$CFG/caelestia/templates/${f##*/}" ]] || cp "$f" "$CFG/caelestia/templates/"
+done
+[[ -e "$CFG/hypr/scheme/current.lua" ]] || cp "$SRC/hypr/scheme/default.lua" "$CFG/hypr/scheme/current.lua"
+
+# Les fonds d'écran PinkSheep apparaissent dans le sélecteur de Caelestia
+IMAGES="$(xdg-user-dir PICTURES 2>/dev/null || echo "$HOME/Images")"
+mkdir -p "$IMAGES/FondsEcran"
+[[ -e "$IMAGES/FondsEcran/PinkSheep" ]] || ln -s /usr/share/pinksheep/wallpapers "$IMAGES/FondsEcran/PinkSheep"
+
+# Les couleurs générées par Caelestia alimentent les applis PinkSheep.
+# Un fichier normal trouvé à la place du lien est mis de côté, jamais supprimé.
+lier() {
+    local cible="$1" source="$2"
+    mkdir -p "$(dirname "$cible")"
+    [[ -L "$cible" && "$(readlink "$cible")" == "$source" ]] && return
+    [[ -e "$cible" || -L "$cible" ]] && mv -f "$cible" "$cible.avant-caelestia"
+    ln -s "$source" "$cible"
+}
+lier "$CFG/kitty/couleurs.conf"          "$THEME/kitty-couleurs.conf"
+lier "$CFG/foot/couleurs.ini"            "$THEME/foot-couleurs.ini"
+lier "$CFG/qt6ct/colors/pinksheep.conf"  "$THEME/qt6ct-pinksheep.conf"
+exit 0

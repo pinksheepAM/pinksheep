@@ -1,0 +1,71 @@
+#!/usr/bin/env bash
+# ╭──────────────────────────────────────────────────────────────╮
+# │  PinkSheep — garde-fou de la session Caelestia                │
+# │  Surveille le shell Caelestia. S'il plante, il est relancé ;  │
+# │  s'il plante 3 fois en 10 minutes, on bascule sur la barre,   │
+# │  les notifications et le lanceur de la session classique,     │
+# │  pour ne jamais rester devant un écran vide.                  │
+# │                                                              │
+# │  pinksheep-caelestia-garde             (lancé par Hyprland)   │
+# │  pinksheep-caelestia-garde --annoncer  (session classique :   │
+# │        explique pourquoi Caelestia n'a pas été utilisé)       │
+# ╰──────────────────────────────────────────────────────────────╯
+ETAT="${XDG_STATE_HOME:-$HOME/.local/state}/pinksheep"
+mkdir -p "$ETAT"
+JOURNAL="$ETAT/session-caelestia.log"
+
+if [[ "${1:-}" == --annoncer ]]; then
+    if [[ -f "$ETAT/caelestia-repli" ]]; then
+        sleep 5
+        notify-send -a PinkSheep -u normal "Session classique" "$(cat "$ETAT/caelestia-repli")"
+        rm -f "$ETAT/caelestia-repli"
+    fi
+    exit 0
+fi
+
+exec >>"$JOURNAL" 2>&1
+shell_actif() { [[ "$(qs -c caelestia list -j 2>/dev/null | jq 'length' 2>/dev/null)" -gt 0 ]]; }
+
+repli_classique() {
+    echo "!! $(date '+%T') repli sur les composants de la session classique"
+    caelestia shell -k >/dev/null 2>&1
+    swaync >/dev/null 2>&1 &
+    waybar >/dev/null 2>&1 &
+    awww-daemon >/dev/null 2>&1 &
+    (sleep 1; pinksheep-fond --restaurer) >/dev/null 2>&1 &
+    hypridle >/dev/null 2>&1 &
+    # Raccourcis indispensables sans le shell : lanceur et menu d'extinction
+    hyprctl eval 'hl.bind("SUPER + space", hl.dsp.exec_cmd("rofi -show drun"))' >/dev/null
+    hyprctl eval 'hl.bind("SUPER + Escape", hl.dsp.exec_cmd("pinksheep-power"))' >/dev/null
+    sleep 2
+    notify-send -a PinkSheep -u critical "Caelestia s'est arrêté" \
+        "La barre PinkSheep classique a pris le relais. Pour retrouver un bureau complet, déconnecte-toi et choisis « PinkSheep classique ». Détails : $JOURNAL"
+    exit 1
+}
+
+# 1. Démarrage : le shell est lancé par la config Caelestia ; on lui laisse 15 s
+for _ in $(seq 15); do shell_actif && break; sleep 1; done
+shell_actif || { echo "-- shell absent après 15 s, nouvel essai"; caelestia shell -d; sleep 10; }
+shell_actif || repli_classique
+
+# 2. Première génération des couleurs, depuis le fond d'écran PinkSheep actuel
+THEME="${XDG_STATE_HOME:-$HOME/.local/state}/caelestia/theme"
+if [[ ! -f "$THEME/kitty-couleurs.conf" ]]; then
+    fond="$(cat "$ETAT/fond-actuel" 2>/dev/null)"
+    [[ -f "$fond" ]] || fond=/usr/share/pinksheep/wallpapers/pinksheep.png
+    echo "-- première génération des couleurs depuis $fond"
+    caelestia wallpaper -f "$fond" >/dev/null 2>&1
+fi
+
+# 3. Surveillance : 3 plantages en 10 minutes = repli
+plantages=()
+while sleep 20; do
+    shell_actif && continue
+    maintenant=$(date +%s)
+    plantages+=("$maintenant")
+    recents=0
+    for t in "${plantages[@]}"; do (( maintenant - t < 600 )) && recents=$((recents + 1)); done
+    echo "-- $(date '+%T') shell arrêté (plantage n°$recents sur 10 min)"
+    (( recents >= 3 )) && repli_classique
+    caelestia shell -d
+done
