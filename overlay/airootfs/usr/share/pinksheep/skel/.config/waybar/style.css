@@ -51,7 +51,7 @@ tooltip {
     padding: 0 14px;
 }
 
-#tray, #pulseaudio, #network, #cpu, #memory, #custom-fond, #custom-notifications {
+#tray, #pulseaudio, #network, #cpu, #memory, #custom-maj, #custom-fond, #custom-notifications {
     padding: 0 10px;
     margin: 5px 0;
     border-radius: 9px;
@@ -66,6 +66,8 @@ tooltip {
 #memory { color: @secondaire; }
 #custom-notifications { color: @texte; }
 #custom-fond { color: @tertiaire; }
+#custom-maj { color: @primaire; }
+#custom-maj.faille { color: @erreur; }
 
 #custom-power {
     color: @primaire;

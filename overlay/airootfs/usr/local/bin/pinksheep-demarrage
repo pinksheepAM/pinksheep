@@ -13,7 +13,7 @@ while true; do
     if internet_ok; then
         printf '   Internet : %sconnecté%s\n\n' "$VERT" "$RAZ"
     else
-        printf '   Internet : %spas de connexion%s  (câble, ou choix 3 pour le Wi-Fi)\n\n' "$ROUGE" "$RAZ"
+        printf "   Internet : %spas de connexion%s  (câble, ou choix 3 pour le Wi-Fi ;\n              l'installeur graphique te le proposera tout seul)\n\n" "$ROUGE" "$RAZ"
     fi
     if graphique_dispo; then
         printf '   %s1%s  Installeur graphique  %s(recommandé)%s\n' "$GRAS" "$RAZ" "$GRIS" "$RAZ"
@@ -36,11 +36,16 @@ while true; do
         read -rp "   Ton choix [$defaut] : " choix
     fi
     case "${choix:-$defaut}" in
-        1) graphique_dispo && pinksheep-graphique ;;
+        1) graphique_dispo || continue
+           # L'installeur a besoin d'internet : on propose le Wi-Fi d'abord
+           if ! internet_ok && ! pinksheep-wifi; then
+               printf "\n   %sL'installation a besoin d'internet.%s Branche un câble ou réessaie le Wi-Fi.\n" "$ROUGE" "$RAZ"
+               read -rp "   Entrée pour revenir au menu… " _
+               continue
+           fi
+           pinksheep-graphique ;;
         2) pinksheep-install ;;
-        3) clear
-           printf '\nDans iwctl, tape :\n   station wlan0 scan\n   station wlan0 get-networks\n   station wlan0 connect "NomDuWifi"\n   exit\n\n'
-           iwctl ;;
+        3) pinksheep-wifi ;;
         4) printf '\nTape  pinksheep-demarrage  pour revenir à ce menu.\n\n'; exit 0 ;;
         5) poweroff ;;
     esac

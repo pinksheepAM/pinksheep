@@ -109,10 +109,7 @@ bonus     python-requests
 bonus     python-pyquery
 bonus     ttf-iosevka-nerd
 bonus     ttf-firacode-nerd
-bonus     zathura
-bonus     zathura-pdf-mupdf
 bonus     swappy
-bonus     newsboat
 
 # ── Applis du quotidien ─────────────────────────
 essentiel dolphin
@@ -139,3 +136,7 @@ bonus     lib32-mangohud
 bonus     discord
 bonus     obs-studio
 bonus     flatpak
+bonus     discover
+bonus     pacman-contrib
+bonus     arch-audit
+bonus     ufw

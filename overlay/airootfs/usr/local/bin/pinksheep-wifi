@@ -1,0 +1,103 @@
+#!/usr/bin/env bash
+# ╭──────────────────────────────────────────────────────────────╮
+# │  PinkSheep — connexion Wi-Fi sur la clé d'installation        │
+# │  Liste les réseaux, on choisit un numéro, on tape le mot de   │
+# │  passe : pas besoin de connaître iwctl.                       │
+# │  Code de sortie : 0 si internet marche à la fin.             │
+# ╰──────────────────────────────────────────────────────────────╯
+set -u
+ROSE=$'\e[1;35m'; VERT=$'\e[32m'; ROUGE=$'\e[31m'; GRIS=$'\e[90m'; GRAS=$'\e[1m'; RAZ=$'\e[0m'
+
+internet_ok() { curl -fsS --max-time 5 -o /dev/null https://archlinux.org; }
+sans_couleurs() { sed 's/\x1b\[[0-9;]*m//g'; }
+
+# Carte Wi-Fi : la première interface réseau qui a un dossier « wireless »
+CARTE=""
+for d in /sys/class/net/*; do
+    [[ -d "$d/wireless" ]] && { CARTE="$(basename "$d")"; break; }
+done
+if [[ -z "$CARTE" ]]; then
+    printf '\n%sAucune carte Wi-Fi détectée.%s Branche un câble réseau, puis réessaie.\n' "$ROUGE" "$RAZ"
+    read -rp "Entrée pour revenir au menu… " _
+    exit 1
+fi
+rfkill unblock wifi 2>/dev/null
+
+lister_reseaux() {
+    NOMS=(); SECURITES=()
+    iwctl station "$CARTE" scan >/dev/null 2>&1
+    sleep 3
+    local ligne
+    while IFS= read -r ligne; do
+        # Une ligne de réseau se termine par sa sécurité puis ses étoiles de signal
+        if [[ "$ligne" =~ ^[[:space:]]*(\>[[:space:]]*)?(.+[^[:space:]])[[:space:]]+(psk|open|8021x|wep)[[:space:]]+\*+[[:space:]]*$ ]]; then
+            NOMS+=("${BASH_REMATCH[2]}")
+            SECURITES+=("${BASH_REMATCH[3]}")
+        fi
+    done < <(iwctl station "$CARTE" get-networks 2>/dev/null | sans_couleurs)
+}
+
+connecter() {
+    local nom="$1" securite="$2" mdp=""
+    case "$securite" in
+        open) iwctl station "$CARTE" connect "$nom" ;;
+        psk|wep)
+            read -rsp "   Mot de passe de « $nom » : " mdp; echo
+            iwctl --passphrase "$mdp" station "$CARTE" connect "$nom" ;;
+        *)
+            printf '   %sCe réseau (entreprise, 802.1x) se configure avec iwctl.%s\n' "$ROUGE" "$RAZ"
+            return 1 ;;
+    esac
+}
+
+attendre_internet() {
+    printf '   Connexion en cours'
+    for _ in $(seq 15); do
+        internet_ok && { printf ' %sconnecté !%s\n' "$VERT" "$RAZ"; return 0; }
+        printf '.'; sleep 1
+    done
+    printf ' %séchec%s (mauvais mot de passe ?)\n' "$ROUGE" "$RAZ"
+    return 1
+}
+
+while true; do
+    clear
+    printf '\n%s   PinkSheep - connexion Wi-Fi%s  %s(carte %s)%s\n\n' "$ROSE" "$RAZ" "$GRIS" "$CARTE" "$RAZ"
+    if internet_ok; then
+        printf '   Internet : %sconnecté%s\n\n' "$VERT" "$RAZ"
+        exit 0
+    fi
+    printf '   Recherche des réseaux…\n'
+    lister_reseaux
+    if ((${#NOMS[@]} == 0)); then
+        printf '   %sAucun réseau trouvé.%s\n' "$ROUGE" "$RAZ"
+    else
+        for i in "${!NOMS[@]}"; do
+            cadenas=""; [[ "${SECURITES[$i]}" != open ]] && cadenas=" ${GRIS}(mot de passe)${RAZ}"
+            printf '   %s%2d%s  %s%s\n' "$GRAS" $((i + 1)) "$RAZ" "${NOMS[$i]}" "$cadenas"
+        done
+    fi
+    printf '\n   %sr%s  Rechercher à nouveau   %sm%s  Réseau masqué   %si%s  iwctl (experts)   %sq%s  Retour\n\n' \
+        "$GRAS" "$RAZ" "$GRAS" "$RAZ" "$GRAS" "$RAZ" "$GRAS" "$RAZ"
+    read -rp "   Ton choix : " choix
+    case "$choix" in
+        q|Q) internet_ok; exit $? ;;
+        r|R|"") continue ;;
+        i|I) iwctl ;;
+        m|M)
+            read -rp "   Nom exact du réseau masqué : " nom
+            read -rsp "   Mot de passe (vide si aucun) : " mdp; echo
+            if [[ -n "$mdp" ]]; then iwctl --passphrase "$mdp" station "$CARTE" connect-hidden "$nom"
+            else iwctl station "$CARTE" connect-hidden "$nom"; fi
+            attendre_internet && { sleep 1; exit 0; }
+            read -rp "   Entrée pour continuer… " _ ;;
+        *)
+            if [[ "$choix" =~ ^[0-9]+$ ]] && ((choix >= 1 && choix <= ${#NOMS[@]})); then
+                n=$((choix - 1))
+                if connecter "${NOMS[$n]}" "${SECURITES[$n]}" && attendre_internet; then
+                    sleep 1; exit 0
+                fi
+                read -rp "   Entrée pour continuer… " _
+            fi ;;
+    esac
+done

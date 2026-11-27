@@ -42,13 +42,10 @@ verifier_internet() {
         printf '\n%sPas de connexion internet.%s\n' "$ROUGE" "$RAZ"
         cat <<EOF
    • Câble Ethernet : branche-le, ça marche tout seul.
-   • Wi-Fi : tape  ${GRAS}iwctl${RAZ}  puis :
-        station wlan0 scan
-        station wlan0 get-networks
-        station wlan0 connect "NomDuWifi"
-        exit
+   • Wi-Fi : l'assistant va s'ouvrir.
 EOF
-        read -rp "Entrée pour réessayer (ou Ctrl+C pour quitter)… " _
+        read -rp "Entrée pour ouvrir l'assistant Wi-Fi (ou Ctrl+C pour quitter)… " _
+        pinksheep-wifi
     done
     printf '%s   -> connecté [ok]%s\n\n' "$LAV" "$RAZ"
 }

@@ -1,0 +1,67 @@
+#!/usr/bin/env bash
+# ╭──────────────────────────────────────────────────────────────╮
+# │  PinkSheep — y a-t-il des mises à jour ?                      │
+# │  pinksheep-verif-maj           module de la barre (JSON)      │
+# │  pinksheep-verif-maj --lancer  tout mettre à jour (terminal)  │
+# │                                                              │
+# │  Compte : paquets Arch (checkupdates), applis Flatpak,        │
+# │  nouvelle version de PinkSheep, et parmi les paquets ceux     │
+# │  qui corrigent une faille connue (arch-audit).                │
+# │  Une notification apparaît quand le nombre augmente.          │
+# ╰──────────────────────────────────────────────────────────────╯
+ETAT="${XDG_STATE_HOME:-$HOME/.local/state}/pinksheep"
+mkdir -p "$ETAT"
+
+if [[ "${1:-}" == --lancer ]]; then
+    exec pinksheep-terminal --class pinksheep-maj bash -c '
+        printf "\n\e[1;35m:: Système (Arch Linux)\e[0m\n"; sudo pacman -Syu
+        printf "\n\e[1;35m:: PinkSheep\e[0m\n";            pinksheep-maj
+        if command -v flatpak >/dev/null; then
+            printf "\n\e[1;35m:: Applis Flatpak\e[0m\n";   flatpak update
+        fi
+        pkill -RTMIN+8 -x waybar
+        printf "\n\e[32mTout est à jour.\e[0m "; read -rp "Entrée pour fermer… " _'
+fi
+
+compter() { grep -c . 2>/dev/null || true; }
+
+arch=0; flat=0; pinksheep=0; failles=0
+command -v checkupdates >/dev/null && arch="$(checkupdates 2>/dev/null | compter)"
+command -v flatpak >/dev/null && flat="$(timeout 60 flatpak remote-ls --updates --columns=application 2>/dev/null | compter)"
+command -v arch-audit >/dev/null && failles="$(timeout 60 arch-audit -u 2>/dev/null | compter)"
+
+# PinkSheep : le dernier commit du dépôt est-il celui installé ?
+depot="$(cat /etc/pinksheep/depot 2>/dev/null || cat /usr/share/pinksheep/depot.conf 2>/dev/null)"
+installe="$(cut -d' ' -f1 /etc/pinksheep/version 2>/dev/null)"
+if [[ -n "$depot" && -n "$installe" ]]; then
+    distant="$(timeout 20 git ls-remote "$depot" HEAD 2>/dev/null | cut -f1)"
+    [[ -n "$distant" && "$distant" != "$installe"* ]] && pinksheep=1
+fi
+
+total=$((arch + flat + pinksheep))
+if ((total == 0)); then
+    echo '{"text": "", "tooltip": "Tout est à jour", "class": "rien"}'
+    echo 0 > "$ETAT/maj-nombre"
+    exit 0
+fi
+
+lignes=()
+((arch))      && lignes+=("$arch paquet(s) Arch")
+((failles))   && lignes+=("   dont $failles qui corrige(nt) une faille connue")
+((flat))      && lignes+=("$flat appli(s) Flatpak")
+((pinksheep)) && lignes+=("Une nouvelle version de PinkSheep")
+lignes+=("" "Clic : tout mettre à jour")
+infobulle="$(printf '%s\\n' "${lignes[@]}")"
+infobulle="${infobulle%\\n}"
+classe=maj; ((failles)) && classe=faille
+
+printf '{"text": "󰚰 %s", "tooltip": "%s", "class": "%s"}\n' "$total" "$infobulle" "$classe"
+
+# Notification seulement quand le nombre augmente (pas à chaque vérification)
+avant="$(cat "$ETAT/maj-nombre" 2>/dev/null || echo 0)"
+echo "$total" > "$ETAT/maj-nombre"
+if ((total > avant)); then
+    message="$total mise(s) à jour disponible(s)"
+    ((failles)) && message+=", dont $failles correctif(s) de sécurité"
+    notify-send -a PinkSheep -i system-software-update "Mises à jour" "$message. Clique sur 󰚰 dans la barre." 2>/dev/null
+fi

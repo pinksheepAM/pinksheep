@@ -120,7 +120,9 @@ Démarre sur la clé (touche **F8**, **F11** ou **F12** au démarrage selon ta c
 5  Éteindre
 ```
 
-**Branche-toi à internet d'abord** : le câble marche tout seul. Pour le Wi-Fi, utilise le choix **3**. PinkSheep télécharge ses paquets pendant l'installation.
+**Internet est nécessaire** : le câble marche tout seul. Sans câble, l'installeur graphique ouvre lui-même l'**assistant Wi-Fi** : tu choisis ton réseau dans la liste et tu tapes le mot de passe (aussi disponible avec le choix **3**). PinkSheep télécharge ses paquets pendant l'installation.
+
+L'installeur demande un **mot de passe administrateur séparé** de ton mot de passe, et 8 caractères minimum pour chacun.
 
 ### Installeur graphique (Calamares)
 
@@ -180,7 +182,11 @@ Pas repris (spécifique au PC de l'auteur) : Spicetify, Seanime, Upscayl, stream
 
 ## Mettre à jour PinkSheep
 
-Une fois PinkSheep installé, **pas besoin de refaire d'ISO** pour l'améliorer :
+Une fois PinkSheep installé, **pas besoin de refaire d'ISO** pour l'améliorer.
+
+Le plus simple : quand l'icône **󰚰** apparaît dans la barre (en rouge si une faille de sécurité est corrigée), clique dessus. Elle met à jour le système, PinkSheep et les applis Flatpak d'un coup. Elle vérifie toutes les heures (clic droit : vérifier maintenant).
+
+À la main :
 
 | Je veux… | Commande |
 |---|---|
@@ -202,6 +208,16 @@ Les sauvegardes sont dans `~/.local/share/pinksheep/sauvegardes/`.
 L'ISO ne sert plus qu'à installer PinkSheep sur un **autre** PC, ou à réinstaller de zéro.
 
 ---
+
+## Installer des applis
+
+- **Discover** (dans le lanceur) : la boutique d'applis Flatpak de Flathub, avec recherche, captures et avis.
+- **Paquets Arch** : `installer nom-du-paquet` dans le terminal (chercher : `chercher mot-clé`).
+
+## Sécurité
+
+- **Pare-feu** (ufw) activé : tout ce qui sort est permis, rien n'entre sans y être invité. Pour une appli qui doit recevoir des connexions (KDE Connect par exemple) : `sudo ufw allow 1714:1764/udp` et `sudo ufw allow 1714:1764/tcp`.
+- **Failles connues** : l'icône des mises à jour devient rouge quand une mise à jour en corrige une (`arch-audit` pour le détail).
 
 ## Personnaliser ta distro
 

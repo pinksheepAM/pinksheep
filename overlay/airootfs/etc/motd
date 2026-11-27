@@ -3,6 +3,6 @@
 
   Menu d'installation :         pinksheep-demarrage
   Installeur texte :            pinksheep-install
-  Wi-Fi :                       iwctl
+  Wi-Fi :                       pinksheep-wifi
   Reprendre l'étape 2 :         pinksheep-install --etape2
 

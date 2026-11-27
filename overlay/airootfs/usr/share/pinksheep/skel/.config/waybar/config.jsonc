@@ -10,7 +10,7 @@
 
     "modules-left":   ["custom/logo", "hyprland/workspaces", "hyprland/window"],
     "modules-center": ["clock"],
-    "modules-right":  ["tray", "pulseaudio", "network", "cpu", "memory", "custom/fond", "custom/notifications", "custom/power"],
+    "modules-right":  ["tray", "pulseaudio", "network", "cpu", "memory", "custom/maj", "custom/fond", "custom/notifications", "custom/power"],
 
     "custom/logo": {
         "format": "🐑",
@@ -88,6 +88,15 @@
         "on-click-right": "swaync-client -d -sw",
         "escape": true,
         "tooltip": false
+    },
+
+    "custom/maj": {
+        "exec": "pinksheep-verif-maj",
+        "return-type": "json",
+        "interval": 3600,
+        "signal": 8,
+        "on-click": "pinksheep-verif-maj --lancer",
+        "on-click-right": "pkill -RTMIN+8 -x waybar"
     },
 
     "custom/fond": {
