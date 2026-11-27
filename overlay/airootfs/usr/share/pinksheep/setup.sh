@@ -273,6 +273,24 @@ if command -v flatpak >/dev/null; then
         alerte "Flathub n'a pas pu être ajouté (sans internet ?) : pinksheep-maj le refera."
 fi
 
+# Affichage à l'écran de Verr. Maj / Verr. Num (SwayOSD écoute le clavier)
+if [[ -f /usr/lib/systemd/system/swayosd-libinput-backend.service ]]; then
+    systemctl enable swayosd-libinput-backend.service
+fi
+
+# Instantané Timeshift avant chaque mise à jour (réglé au premier lancement)
+install -Dm644 "$PINKSHEEP_DIR/systeme/pacman/00-pinksheep-instantane.hook" \
+    /etc/pacman.d/hooks/00-pinksheep-instantane.hook
+
+# Jeux Epic, GOG, Amazon : Heroic (Flatpak, comme les autres applis de la boutique)
+if command -v flatpak >/dev/null && \
+   flatpak install -y --noninteractive --system flathub com.heroicgameslauncher.hgl >/dev/null 2>&1; then
+    mkdir -p /etc/pinksheep && touch /etc/pinksheep/heroic-installe
+    info "Heroic Games Launcher installé"
+else
+    alerte "Heroic n'a pas pu être installé maintenant : pinksheep-maj le refera."
+fi
+
 # ────────────────────────────────────────────────────────────────
 etape "Écran de chargement au démarrage"
 # Avant le menu GRUB et l'image de démarrage, reconstruits juste après

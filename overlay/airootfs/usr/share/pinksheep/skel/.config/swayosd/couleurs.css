@@ -1,0 +1,14 @@
+/* Généré automatiquement par matugen à partir du fond d'écran */
+@define-color fond        #191119;
+@define-color fond_alpha  alpha(#191119, 0.80);
+@define-color surface     #261d26;
+@define-color surface_haute #312730;
+@define-color texte       #eedeeb;
+@define-color discret     #d2c2ce;
+@define-color primaire    #f9acff;
+@define-color sur_primaire #570066;
+@define-color secondaire  #e6bad7;
+@define-color tertiaire   #f8b3d0;
+@define-color conteneur   #7b0090;
+@define-color contour     #9a8d98;
+@define-color erreur      #ffb4ab;

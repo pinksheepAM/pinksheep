@@ -35,6 +35,10 @@ output_path = "../waybar/couleurs.css"
 input_path  = "./modeles/couleurs.css"
 output_path = "../swaync/couleurs.css"
 
+[templates.swayosd]
+input_path  = "./modeles/couleurs.css"
+output_path = "../swayosd/couleurs.css"
+
 [templates.wlogout]
 input_path  = "./modeles/couleurs.css"
 output_path = "../wlogout/couleurs.css"

@@ -42,7 +42,7 @@ echec()  { printf '\n%s[X] %s%s\n\n' "$ROUGE" "$*" "$RAZ"; exit 1; }
 # Fichiers générés (couleurs du fond, clavier) : on ne les remplace jamais
 GENERES=(
     hypr/couleurs.lua hypr/hyprlock-couleurs.conf hypr/clavier.lua hypr/perso.lua
-    waybar/couleurs.css swaync/couleurs.css wlogout/couleurs.css rofi/couleurs.rasi
+    waybar/couleurs.css swaync/couleurs.css swayosd/couleurs.css wlogout/couleurs.css rofi/couleurs.rasi
     kitty/couleurs.conf foot/couleurs.ini gtk-3.0/gtk.css gtk-4.0/gtk.css
     qt6ct/colors/pinksheep.conf qt6ct/qt6ct.conf btop/themes/pinksheep.theme
     cava/config nvim/lua/couleurs.lua yazi/theme.toml mpd/mpd.conf
