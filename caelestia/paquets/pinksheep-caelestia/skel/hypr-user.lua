@@ -33,4 +33,6 @@ hl.bind("SUPER + W", hl.dsp.global("caelestia:nexus"))   -- page « Fond d'écra
 hl.on("hyprland.start", function()
     hl.exec_cmd("systemctl --user start hyprpolkitagent")
     hl.exec_cmd("pinksheep-caelestia-garde")
+    -- Verr. Maj / Verr. Num à l'écran (le volume et la luminosité : affichage de Caelestia)
+    hl.exec_cmd("swayosd-server")
 end)

@@ -28,7 +28,7 @@ done
 
 # Ordre de construction : chaque paquet peut dépendre des précédents
 ORDRE=(python-materialyoucolor libcava ttf-rubik-vf qt6-m3shapes-pinksheep
-       caelestia-cli-pinksheep caelestia-shell-pinksheep pinksheep-caelestia pinksheep-instantanes)
+       caelestia-cli-pinksheep caelestia-shell-pinksheep pinksheep-caelestia)
 CHROOT="${PINKSHEEP_CHROOT:-$HOME/.cache/pinksheep/chroot}"
 SORTIE="$ICI/_depot"
 
@@ -56,7 +56,7 @@ for p in "${ORDRE[@]}"; do
     echo ":: Construction de $p"
     cd "$ICI/paquets/$p"
     rm -f ./*.pkg.tar.zst
-    if [[ "$p" == pinksheep-caelestia || "$p" == pinksheep-instantanes ]]; then
+    if [[ "$p" == pinksheep-caelestia ]]; then
         # Paquets sans compilation (fichiers et scripts) : pas besoin du chroot
         makepkg --nodeps --clean --force
     else

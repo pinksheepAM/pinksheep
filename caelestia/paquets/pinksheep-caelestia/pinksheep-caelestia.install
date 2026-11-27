@@ -1,7 +1,27 @@
+# Session Caelestia présélectionnée sur l'écran de connexion (SDDM retient ensuite
+# la dernière session choisie : si on prend « PinkSheep classique », elle reste choisie)
+session_par_defaut() {
+    local etat=/var/lib/sddm/state.conf
+    local session=/usr/share/wayland-sessions/pinksheep-caelestia.desktop
+    [[ -d /var/lib/sddm ]] || return 0
+    if [[ -f $etat ]] && grep -q '^\[Last\]' "$etat"; then
+        if grep -q '^Session=' "$etat"; then
+            sed -i "s|^Session=.*|Session=$session|" "$etat"
+        else
+            sed -i "/^\[Last\]/a Session=$session" "$etat"
+        fi
+    else
+        printf '[Last]\nSession=%s\n' "$session" >> "$etat"
+    fi
+    chown sddm:sddm "$etat" 2>/dev/null || true
+}
+
 post_install() {
-    echo ":: Session « PinkSheep (Caelestia) » installée."
-    echo "   Déconnecte-toi, puis choisis-la en bas de l'écran de connexion."
-    echo "   La session « PinkSheep classique » reste disponible en secours."
+    session_par_defaut
+    echo ":: Session « PinkSheep (Caelestia) » installée et choisie par défaut."
+    echo "   Elle s'ouvrira à la prochaine connexion. La session « PinkSheep classique »"
+    echo "   reste disponible en bas de l'écran de connexion (et prend le relais toute"
+    echo "   seule si Caelestia ne démarre pas)."
     /usr/bin/pinksheep-caelestia-verifier --pacman || true
 }
 post_upgrade() {

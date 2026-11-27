@@ -36,8 +36,6 @@ fi
 
 echo ":: Installation (avec mise à jour complète du système, comme toujours sur Arch)"
 pacman -Syu --needed pinksheep-caelestia
-# Les instantanés sont un plus : leur absence ne bloque rien
-pacman -S --needed --noconfirm pinksheep-instantanes || echo "   (instantanés non installés : Timeshift introuvable)"
 
 echo ":: Vérification"
 pinksheep-caelestia-verifier || true
@@ -49,6 +47,6 @@ C'est installé. Pour essayer :
   2. En bas de l'écran de connexion, choisis « PinkSheep (Caelestia) ».
   3. Si quelque chose ne va pas, choisis « PinkSheep classique » : rien n'a été modifié.
 
-Conseillé : configure une fois Timeshift (sudo timeshift-gtk, mode RSYNC) pour
-avoir un instantané automatique avant chaque mise à jour.
+Un instantané Timeshift est pris avant chaque mise à jour (PinkSheep 1.1.5) :
+en cas de souci, sudo timeshift --restore.
 FIN
