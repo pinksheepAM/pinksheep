@@ -284,6 +284,7 @@ Dans le terminal : `y` ouvre Yazi (et te laisse dans le dossier où tu l'as quit
 | Problème | Solution |
 |---|---|
 | Windows n'apparaît pas dans le menu de démarrage | Une fois dans PinkSheep : `sudo grub-mkconfig -o /boot/grub/grub.cfg` |
+| Une mise à jour a cassé quelque chose | `sudo timeshift --restore` (ou l'appli Timeshift) : choisis l'instantané « PinkSheep : avant mise à jour » d'avant le problème |
 | Le démarrage reste bloqué sur l'écran de chargement | Appuie sur **Échap** pour voir les messages du système. Pour revenir aux messages à chaque démarrage : `sudo pinksheep-chargement --off` |
 | Le terminal s'ouvre puis se ferme aussitôt | Kitty a besoin d'OpenGL 3.3. PinkSheep bascule alors tout seul sur **foot**, un terminal sans accélération graphique, avec les mêmes couleurs |
 | Écran noir après la connexion | Sur l'écran de connexion, choisis la session **« Hyprland (secours) »** : rendu logiciel, sans effets, mais le bureau s'affiche et tu peux réparer |
