@@ -1,5 +1,25 @@
 #!/usr/bin/env bash
 # PinkSheep — applique le thème sombre aux applis GTK/GNOME à chaque connexion.
+# Applis Qt (Dolphin, Okular, LibreOffice…) : style Kvantum « PinkSheep », aux couleurs
+# du fond d'écran. Une seule fois, et seulement si Kvantum et le thème sont là ;
+# si tu as choisi un autre style que Breeze dans qt6ct, on n'y touche pas.
+# (« pinksheep-theme --qt » : seulement cette partie, appelée par pinksheep-fond.)
+style_qt() {
+    local repere="${XDG_STATE_HOME:-$HOME/.local/state}/pinksheep/style-kvantum"
+    local conf="$HOME/.config/qt6ct/qt6ct.conf"
+    [[ -e "$repere" ]] && return 0
+    [[ -f /usr/lib/qt6/plugins/styles/libkvantum.so && -f "$conf" \
+       && -f "$HOME/.config/Kvantum/PinkSheep/PinkSheep.kvconfig" ]] || return 0
+    if grep -q '^style=Breeze$' "$conf"; then
+        sed -i -e 's/^style=Breeze$/style=kvantum/' -e 's/^custom_palette=true$/custom_palette=false/' "$conf"
+    fi
+    mkdir -p "$(dirname "$repere")" && touch "$repere"
+}
+if [[ "${1:-}" == --qt ]]; then
+    style_qt
+    exit 0
+fi
+
 if command -v gsettings >/dev/null 2>&1; then
     gsettings set org.gnome.desktop.interface color-scheme 'prefer-dark'
     if [[ -d /usr/share/themes/adw-gtk3-dark ]]; then
@@ -28,3 +48,5 @@ if grep -q '@MUSIQUE@' "$HOME/.config/mpd/mpd.conf" 2>/dev/null; then
     sed -i "s#@MUSIQUE@#$musique#g" "$HOME/.config/mpd/mpd.conf"
     mkdir -p "$musique" "$HOME/.local/share/mpd/playlists" "$HOME/.local/state/mpd"
 fi
+
+style_qt

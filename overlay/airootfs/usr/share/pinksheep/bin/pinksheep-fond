@@ -66,6 +66,7 @@ appliquer() {
             matugen -c "$HOME/.config/matugen/hyprlust/config.toml" image "$image" \
                 -t "$SCHEMA" --source-color-index 0 -q
         fi
+        pinksheep-theme --qt 2>/dev/null   # 1re fois : applis Qt en style Kvantum PinkSheep
         recharger_applis
     else
         notify-send -u critical "Couleurs" "matugen n'a pas pu lire cette image."

@@ -55,9 +55,19 @@ hl.monitor({
 hl.env("XCURSOR_SIZE", "24")
 hl.env("HYPRCURSOR_SIZE", "24")
 hl.env("XCURSOR_THEME", "breeze_cursors")
-hl.env("QT_QPA_PLATFORMTHEME", "qt6ct")        -- thème des applis Qt/KDE (Dolphin…)
+-- Thème des applis Qt/KDE (Dolphin…). « qt5ct » sert aux applis Qt 5 (qt5ct)
+-- ET Qt 6 (qt6ct répond aussi à ce nom) : les deux prennent le style Kvantum PinkSheep.
+hl.env("QT_QPA_PLATFORMTHEME", "qt5ct")
 hl.env("XDG_MENU_PREFIX", "arch-")             -- répare le menu « Ouvrir avec » de Dolphin
 hl.env("ELECTRON_OZONE_PLATFORM_HINT", "auto") -- Discord, VS Code… en Wayland natif
+
+-- LibreOffice en mode Qt 6 : il prend le même style (Kvantum) que Dolphin, Okular…
+-- Seulement si le module Qt 6 de LibreOffice est présent (sinon il choisit seul).
+local f_lo = io.open("/usr/lib/libreoffice/program/libvclplug_qt6lo.so", "r")
+if f_lo then
+    f_lo:close()
+    hl.env("SAL_USE_VCLPLUGIN", "qt6")
+end
 
 -- NVIDIA : le script d'installation écrit "nvidia" dans ce fichier si besoin.
 local function lire_gpu()

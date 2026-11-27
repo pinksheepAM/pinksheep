@@ -76,6 +76,9 @@ bonus     papirus-icon-theme
 bonus     breeze
 bonus     breeze-gtk
 bonus     qt6ct
+bonus     qt5ct
+bonus     kvantum
+bonus     kvantum-qt5
 bonus     nwg-look
 bonus     adw-gtk-theme
 
