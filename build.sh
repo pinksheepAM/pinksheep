@@ -71,17 +71,39 @@ installer_dependances() {
     pacman -S --needed --noconfirm $deps
 }
 
+# Recettes AUR figées : on compile toujours CETTE version, relue, jamais « la dernière ».
+# Format : paquet → « commit de la recette AUR | sha256 du PKGBUILD à ce commit ».
+# Pour passer à une nouvelle version : relire le PKGBUILD, puis mettre à jour les deux valeurs.
+declare -A AUR_FIGE=(
+    [calamares]="167151beb537c06cb75c8dbfd409799ba308bb66|8ea0869d8f366ef043693815000aabf7caefedb52cf53a9150f46194cb2bd9c2"  # 3.4.2-2
+)
+
 # Compile un paquet AUR et le copie dans le dépôt local
 compiler_aur() {
-    local paquet="$1" patch="${2:-}" qui
+    local paquet="$1" patch="${2:-}" qui fige commit somme
     qui="$(utilisateur_compilation)"
     rm -rf "${AUR_TRAVAIL:?}/$paquet"
     mkdir -p "$AUR_TRAVAIL"
     chown "$qui" "$AUR_TRAVAIL"
-    runuser -u "$qui" -- git clone -q "https://aur.archlinux.org/$paquet.git" "$AUR_TRAVAIL/$paquet" \
-        || runuser -u "$qui" -- git clone -q --depth 1 --branch "$paquet" --single-branch \
-               https://github.com/archlinux/aur.git "$AUR_TRAVAIL/$paquet" \
-        || return 1
+    fige="${AUR_FIGE[$paquet]:-}"
+    # Version figée : prise sur le miroir officiel de l'AUR chez GitHub (où son commit a été vérifié)
+    if [[ -z "$fige" ]]; then
+        runuser -u "$qui" -- git clone -q "https://aur.archlinux.org/$paquet.git" "$AUR_TRAVAIL/$paquet"
+    fi
+    if [[ ! -d "$AUR_TRAVAIL/$paquet/.git" ]]; then
+        runuser -u "$qui" -- git clone -q --branch "$paquet" --single-branch \
+            https://github.com/archlinux/aur.git "$AUR_TRAVAIL/$paquet" || return 1
+    fi
+    if [[ -n "$fige" ]]; then
+        commit="${fige%%|*}"; somme="${fige##*|}"
+        runuser -u "$qui" -- git -C "$AUR_TRAVAIL/$paquet" checkout -q "$commit" 2>/dev/null \
+            || { alerte "$paquet : version figée $commit introuvable"; return 1; }
+        if ! echo "$somme  $AUR_TRAVAIL/$paquet/PKGBUILD" | sha256sum -c --quiet - 2>/dev/null; then
+            alerte "$paquet : le PKGBUILD ne correspond pas à la version vérifiée, compilation refusée"
+            return 1
+        fi
+        printf "   %s : recette AUR figée %s, vérifiée\n" "$paquet" "${commit:0:7}"
+    fi
     if [[ -n "$patch" ]]; then
         sed -i "$patch" "$AUR_TRAVAIL/$paquet/PKGBUILD"
     fi

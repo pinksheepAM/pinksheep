@@ -1,0 +1,14 @@
+# PinkSheep — instantané du système AVANT toute installation, mise à jour ou suppression
+# de paquets (au plus un par heure). Ne bloque jamais pacman.
+# Le préfixe 00 le fait passer avant les autres crochets.
+[Trigger]
+Operation = Install
+Operation = Upgrade
+Operation = Remove
+Type = Package
+Target = *
+
+[Action]
+Description = PinkSheep : instantané du système avant la mise à jour…
+When = PreTransaction
+Exec = /usr/local/bin/pinksheep-instantane avant-pacman

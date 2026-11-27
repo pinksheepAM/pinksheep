@@ -18,6 +18,7 @@ essentiel rofi
 essentiel kitty
 bonus     foot
 essentiel sddm
+essentiel swayosd
 essentiel plymouth
 essentiel qt6-wayland
 essentiel qt5-wayland
@@ -138,6 +139,7 @@ bonus     lib32-mangohud
 bonus     discord
 bonus     obs-studio
 bonus     flatpak
+bonus     timeshift
 bonus     discover
 bonus     qqc2-desktop-style
 bonus     pacman-contrib

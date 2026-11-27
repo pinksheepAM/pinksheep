@@ -1,5 +1,13 @@
 # Nouveautés de PinkSheep
 
+## PinkSheep 1.1.5 (27/11/2026)
+
+- Affichage à l'écran : le volume, le micro, la luminosité, Verr. Maj et Verr. Num s'affichent en bas de l'écran, aux couleurs de ton fond.
+- Écran de verrouillage : il te prévient quand Verr. Maj est activé.
+- Avant chaque mise à jour, un instantané du système est pris (Timeshift, sans tes fichiers personnels). Si une mise à jour casse quelque chose : sudo timeshift --restore. Les 3 derniers sont gardés.
+- Heroic Games Launcher pour tes jeux Epic (installé une seule fois, en Flatpak).
+- Sécurité : l'installeur et le style Hyprlust utilisent désormais des versions figées et vérifiées.
+
 ## PinkSheep 1.1.4 (27/11/2026)
 
 - Barre des tâches dans la barre du haut : une icône par fenêtre ouverte. Clic sur l'appli active : elle se réduit ; clic sur une autre : elle s'affiche ; clic du milieu : elle se ferme.
