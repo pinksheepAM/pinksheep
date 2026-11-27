@@ -137,6 +137,7 @@ bonus     discord
 bonus     obs-studio
 bonus     flatpak
 bonus     discover
+bonus     qqc2-desktop-style
 bonus     pacman-contrib
 bonus     arch-audit
 bonus     ufw
