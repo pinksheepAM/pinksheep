@@ -1,0 +1,30 @@
+/* Affichage à l'écran PinkSheep (volume, luminosité, Verr. Maj) —
+   couleurs : couleurs.css, généré depuis le fond d'écran */
+@import url("couleurs.css");
+
+window#osd {
+    border-radius: 999px;
+    border: 2px solid alpha(@primaire, 0.45);
+    background: alpha(@fond, 0.88);
+}
+window#osd #container { margin: 14px 18px; }
+window#osd image, window#osd label { color: @texte; }
+window#osd image:disabled, window#osd progressbar:disabled { opacity: 0.5; }
+window#osd progressbar, window#osd segmentedprogress {
+    min-height: 6px;
+    border-radius: 999px;
+    background: transparent;
+    border: none;
+}
+window#osd trough, window#osd segment {
+    min-height: inherit;
+    border-radius: inherit;
+    border: none;
+    background: alpha(@texte, 0.2);
+}
+window#osd progress, window#osd segment.active {
+    min-height: inherit;
+    border-radius: inherit;
+    border: none;
+    background: linear-gradient(90deg, @primaire, @tertiaire);
+}
