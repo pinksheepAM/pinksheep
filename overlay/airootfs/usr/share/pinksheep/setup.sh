@@ -281,6 +281,10 @@ if [[ -f /etc/default/grub ]]; then
     grep -q '^GRUB_DISABLE_OS_PROBER=' /etc/default/grub || echo 'GRUB_DISABLE_OS_PROBER=false' >> /etc/default/grub
     sed -i 's/^GRUB_DISTRIBUTOR=.*/GRUB_DISTRIBUTOR="PinkSheep"/' /etc/default/grub
     sed -i 's/^GRUB_TIMEOUT=.*/GRUB_TIMEOUT=5/' /etc/default/grub
+    # Thème PinkSheep (pour revenir au menu texte : sudo pinksheep-grub --texte)
+    if [[ ! -f /etc/pinksheep/grub-texte ]]; then
+        /usr/local/bin/pinksheep-grub --theme --sans-mkconfig || alerte "thème GRUB non appliqué (menu texte gardé)"
+    fi
     grub-mkconfig -o /boot/grub/grub.cfg || alerte "grub-mkconfig a échoué"
     info "GRUB configuré (Windows apparaîtra dans le menu s'il est détecté)"
 elif compgen -G "/boot/loader/entries/*.conf" >/dev/null; then
