@@ -56,3 +56,32 @@ if command -v plymouth-set-default-theme >/dev/null && [[ ! -f /etc/pinksheep/ch
         fi
     fi
 fi
+
+# 2026-11 (1.1.5) : affichage à l'écran de Verr. Maj / Verr. Num (SwayOSD)
+if [[ -f /usr/lib/systemd/system/swayosd-libinput-backend.service ]] && \
+   ! systemctl is-enabled swayosd-libinput-backend.service >/dev/null 2>&1; then
+    systemctl enable --now swayosd-libinput-backend.service >/dev/null 2>&1 && \
+        echo "   -> Verr. Maj et Verr. Num s'affichent à l'écran quand tu appuies dessus"
+fi
+
+# 2026-11 (1.1.5) : instantané Timeshift avant chaque mise à jour
+if command -v timeshift >/dev/null; then
+    cible=/etc/pacman.d/hooks/00-pinksheep-instantane.hook
+    if ! cmp -s /usr/share/pinksheep/systeme/pacman/00-pinksheep-instantane.hook "$cible"; then
+        install -Dm644 /usr/share/pinksheep/systeme/pacman/00-pinksheep-instantane.hook "$cible"
+        [[ -f /etc/timeshift/timeshift.json ]] || /usr/local/bin/pinksheep-instantane --configurer >/dev/null
+        echo "   -> Instantané du système avant chaque mise à jour (revenir en arrière : sudo timeshift --restore)"
+    fi
+fi
+
+# 2026-11 (1.1.5) : Heroic Games Launcher (jeux Epic, GOG, Amazon), une seule fois :
+# si tu le désinstalles, il ne revient pas
+if command -v flatpak >/dev/null && [[ ! -f /etc/pinksheep/heroic-installe ]]; then
+    echo "   -> Installation de Heroic Games Launcher (jeux Epic), quelques minutes…"
+    if flatpak install -y --noninteractive --system flathub com.heroicgameslauncher.hgl >/dev/null 2>&1; then
+        mkdir -p /etc/pinksheep && touch /etc/pinksheep/heroic-installe
+        echo "   -> Heroic installé (dans le lanceur : « Heroic Games Launcher »)"
+    else
+        echo "   -> Heroic n'a pas pu être installé (connexion ?) : ce sera retenté à la prochaine mise à jour"
+    fi
+fi

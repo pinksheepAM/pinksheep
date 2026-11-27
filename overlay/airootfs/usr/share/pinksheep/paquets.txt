@@ -138,6 +138,7 @@ bonus     lib32-mangohud
 bonus     discord
 bonus     obs-studio
 bonus     flatpak
+bonus     timeshift
 bonus     discover
 bonus     qqc2-desktop-style
 bonus     pacman-contrib
