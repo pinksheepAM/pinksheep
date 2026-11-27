@@ -267,6 +267,10 @@ if [[ -f "$PS/correctifs.sh" && -z "$RACINE" ]]; then
 fi
 maj_configs "$ANCIEN"
 regenerer
+# Boutons des fenêtres (hyprbars) : recompilés si Hyprland a changé de version
+if [[ -n "${HYPRLAND_INSTANCE_SIGNATURE:-}" && -z "$RACINE" ]] && command -v pinksheep-boutons >/dev/null; then
+    pinksheep-boutons --maj || alerte "boutons des fenêtres : relance « pinksheep-boutons --maj » plus tard"
+fi
 printf '%s\n' "$VERSION" | $SUDO tee "$ETC/version" >/dev/null
 
 # Nouvelle version de PinkSheep ? On affiche ses nouveautés une fois.

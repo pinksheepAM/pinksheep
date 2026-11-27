@@ -1,5 +1,11 @@
 # Nouveautés de PinkSheep
 
+## PinkSheep 1.1.4 (27/11/2026)
+
+- Barre des tâches dans la barre du haut : une icône par fenêtre ouverte. Clic sur l'appli active : elle se réduit ; clic sur une autre : elle s'affiche ; clic du milieu : elle se ferme.
+- Réduire une fenêtre : SUPER + R (elle reste dans la barre des tâches, un clic la fait revenir).
+- Boutons réduire / agrandir / fermer sur les fenêtres, aux couleurs de ton fond : à installer une fois avec pinksheep-boutons (quelques minutes). Double-clic sur la barre de titre : agrandir.
+
 ## PinkSheep 1.1.3 (27/11/2026)
 
 - Écran de chargement : après le menu, un écran PinkSheep (mouton, titre rose, points animés) remplace les messages du système jusqu'à l'écran de connexion. Échap montre les messages ; pour les retrouver à chaque démarrage : sudo pinksheep-chargement --off.

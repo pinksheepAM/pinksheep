@@ -210,6 +210,11 @@ L'ISO ne sert plus qu'à installer PinkSheep sur un **autre** PC, ou à réinsta
 
 ---
 
+## Les fenêtres à la souris
+
+- **Barre des tâches** (en haut à gauche, après les bureaux) : une icône par fenêtre. Clic sur l'appli active = la réduire ; clic sur une autre = l'afficher (même réduite) ; clic du milieu = la fermer.
+- **Boutons sur les fenêtres** (réduire / agrandir / fermer, comme sur Windows) : `pinksheep-boutons` dans un terminal du bureau, une seule fois (quelques minutes de compilation). Ils prennent les couleurs de ton fond d'écran. Les enlever : `pinksheep-boutons --off`.
+
 ## Installer des applis
 
 - **Discover** (dans le lanceur) : la boutique d'applis Flatpak de Flathub, avec recherche, captures et avis.
@@ -256,6 +261,7 @@ Sur un PC où PinkSheep est déjà installé, une modification envoyée sur le d
 | `SUPER + Q` ou `ALT + F4` | Fermer la fenêtre |
 | `SUPER + V` | Fenêtre flottante ↔ en tuile |
 | `SUPER + F` / `SUPER + M` | Plein écran / agrandir |
+| `SUPER + R` | Réduire la fenêtre (un clic sur son icône dans la barre la fait revenir) |
 | `SUPER + flèches` | Changer de fenêtre |
 | `SUPER + SHIFT + flèches` | Déplacer la fenêtre |
 | `SUPER + 1…0` | Changer de bureau |

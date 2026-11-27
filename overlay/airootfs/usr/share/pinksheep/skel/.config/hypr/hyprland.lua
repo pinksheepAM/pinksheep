@@ -300,6 +300,8 @@ bind(mainMod .. " + mouse_up",   hl.dsp.focus({ workspace = "e-1" }), "Bureau pr
 -- Bureau « tiroir » : un bureau caché qu'on fait apparaître par-dessus
 bind(mainMod .. " + S",         hl.dsp.workspace.toggle_special("tiroir"),          "Afficher / cacher le tiroir")
 bind(mainMod .. " + SHIFT + D", hl.dsp.window.move({ workspace = "special:tiroir" }), "Ranger la fenêtre dans le tiroir")
+-- Réduire : la fenêtre disparaît mais reste dans la barre des tâches (un clic l'y fait revenir)
+bind(mainMod .. " + R", hl.dsp.window.move({ workspace = "special:reduites", follow = false }), "Réduire la fenêtre")
 
 -- Souris : SUPER + clic gauche = déplacer, SUPER + clic droit = redimensionner
 bind(mainMod .. " + mouse:272", hl.dsp.window.drag(),   "Déplacer la fenêtre (souris)",      { mouse = true })
@@ -433,6 +435,10 @@ end
 if style_choisi() == "hyprlust" then
     pcall(require, "style-hyprlust")
 end
+
+
+-- Réduire / agrandir / fermer à la souris (barre des tâches, boutons des fenêtres)
+pcall(require, "fenetres")
 
 
 ----------------------------

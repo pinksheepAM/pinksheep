@@ -1,0 +1,85 @@
+#!/usr/bin/env bash
+# ╭──────────────────────────────────────────────────────────────╮
+# │  PinkSheep — boutons réduire / agrandir / fermer              │
+# │  sur les fenêtres (module officiel « hyprbars » de Hyprland)  │
+# │                                                              │
+# │  pinksheep-boutons            les installer et les activer    │
+# │  pinksheep-boutons --off      les enlever                     │
+# │  pinksheep-boutons --etat     sont-ils actifs ?               │
+# │  pinksheep-boutons --maj      recompiler après une mise à     │
+# │                               jour de Hyprland (pinksheep-maj │
+# │                               le fait tout seul)              │
+# │                                                              │
+# │  À lancer depuis ta session Hyprland, sans sudo (le mot de    │
+# │  passe est demandé quand il faut).                            │
+# ╰──────────────────────────────────────────────────────────────╯
+set -uo pipefail
+DEPOT=https://github.com/hyprwm/hyprland-plugins
+OUTILS=(cmake cpio hyprwayland-scanner pkgconf gcc make git)
+ROSE=$'\e[38;5;211m'; GRIS=$'\e[90m'; RAZ=$'\e[0m'
+
+MODE=activer
+case "${1:-}" in
+    "") ;;
+    --on) MODE=activer ;;
+    --off) MODE=desactiver ;;
+    --etat) MODE=etat ;;
+    --maj) MODE=maj ;;
+    --charger) MODE=charger ;;
+    -h|--help) sed -n '2,15p' "$0"; exit 0 ;;
+    *) echo "Option inconnue : $1"; exit 1 ;;
+esac
+
+etape() { printf '\n%s==>%s %s\n' "$ROSE" "$RAZ" "$*"; }
+active() { command -v hyprpm >/dev/null && hyprpm list 2>/dev/null | grep -A1 'Plugin hyprbars' | grep -q 'enabled:.*true'; }
+
+if [[ $MODE == etat ]]; then
+    if active; then echo "Boutons sur les fenêtres : activés"; else echo "Boutons sur les fenêtres : désactivés"; fi
+    exit 0
+fi
+
+# Au démarrage de la session (hyprland.lua) : charge le module s'il est activé
+if [[ $MODE == charger ]]; then
+    active || exit 0
+    hyprpm reload >/dev/null 2>&1 && exit 0
+    notify-send -a PinkSheep -i dialog-warning "Boutons des fenêtres" \
+        "Hyprland a été mis à jour : lance « pinksheep-boutons --maj » dans un terminal." 2>/dev/null
+    exit 1
+fi
+
+[[ $EUID -ne 0 ]] || { echo "Lance-le sans sudo : pinksheep-boutons (le mot de passe sera demandé)."; exit 1; }
+[[ -n "${HYPRLAND_INSTANCE_SIGNATURE:-}" ]] || { echo "À lancer depuis ta session Hyprland (dans un terminal du bureau)."; exit 1; }
+command -v hyprpm >/dev/null || { echo "hyprpm est introuvable (il vient avec Hyprland)."; exit 1; }
+
+if [[ $MODE == desactiver ]]; then
+    hyprpm disable hyprbars >/dev/null 2>&1
+    hyprpm reload >/dev/null 2>&1
+    echo "Boutons enlevés (pour les remettre : pinksheep-boutons)."
+    exit 0
+fi
+
+if [[ $MODE == maj ]]; then
+    active || exit 0
+    hyprpm reload >/dev/null 2>&1 && exit 0      # déjà à jour pour ce Hyprland
+    etape "Boutons des fenêtres : recompilation pour la nouvelle version de Hyprland"
+    hyprpm update && hyprpm reload -n
+    exit $?
+fi
+
+etape "Outils de compilation"
+sudo pacman -S --needed --noconfirm "${OUTILS[@]}" || { echo "Impossible d'installer les outils."; exit 1; }
+
+etape "Préparation pour ta version de Hyprland ($(hyprctl version -j 2>/dev/null | grep -o '"tag": *"[^"]*"' | cut -d'"' -f4))"
+printf '%sCompilation : quelques minutes, c'"'"'est normal.%s\n' "$GRIS" "$RAZ"
+hyprpm update || { echo "hyprpm update a échoué : rien n'a changé sur ton bureau."; exit 1; }
+
+etape "Module hyprbars"
+if ! hyprpm list 2>/dev/null | grep -qi hyprbars; then
+    hyprpm add "$DEPOT" <<< $'y\ny\ny\ny' || { echo "Téléchargement du module impossible : rien n'a changé."; exit 1; }
+fi
+hyprpm enable hyprbars || { echo "Activation impossible : rien n'a changé."; exit 1; }
+hyprpm reload -n
+
+printf '\n%sBoutons activés !%s Survole les pastilles en haut à droite des fenêtres :\n' "$ROSE" "$RAZ"
+printf '   −  réduire (la fenêtre reste dans la barre des tâches)\n   +  agrandir\n   ×  fermer\n'
+printf '   Double-clic sur la barre : agrandir. Pour les enlever : pinksheep-boutons --off\n'
