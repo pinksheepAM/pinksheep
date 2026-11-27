@@ -279,8 +279,10 @@ if [[ -f /usr/lib/systemd/system/swayosd-libinput-backend.service ]]; then
 fi
 
 # Instantané Timeshift avant chaque mise à jour (réglé au premier lancement)
+# (dans le dossier « système » des crochets : il ne s'applique qu'à CE système,
+#  pas aux chroots ou ISO construits depuis ce PC)
 install -Dm644 "$PINKSHEEP_DIR/systeme/pacman/00-pinksheep-instantane.hook" \
-    /etc/pacman.d/hooks/00-pinksheep-instantane.hook
+    /usr/share/libalpm/hooks/00-pinksheep-instantane.hook
 
 # Jeux Epic, GOG, Amazon : Heroic (Flatpak, comme les autres applis de la boutique)
 if command -v flatpak >/dev/null && \

@@ -16,6 +16,15 @@
 # │      --sans-graphique        ISO avec l'installeur texte seul │
 # │      --recompiler-calamares  force une nouvelle compilation   │
 # │  Résultat : iso/pinksheep-AAAA.MM.JJ-x86_64.iso                │
+# │                                                              │
+# │  ⚠ Il modifie la machine qui construit : mise à jour complète │
+# │  du système (pacman -Syu) + archiso, dépendances de Calamares │
+# │  installées, dossier /var/tmp/pinksheep-aur, éventuellement   │
+# │  un compte « pinksheep-build ». Fait pour la VM atelier.      │
+# │  Sur un PC de tous les jours : compiler Calamares à part dans │
+# │  un chroot propre (makechrootpkg), le déposer dans            │
+# │  _construction/depot/ ; build.sh le réutilise sans rien       │
+# │  installer d'autre que archiso.                               │
 # ╰──────────────────────────────────────────────────────────────╯
 set -euo pipefail
 
@@ -46,7 +55,8 @@ if [[ $EUID -ne 0 ]]; then
 fi
 
 etape "Installation des outils (archiso)"
-pacman -Sy --needed --noconfirm archiso
+# Jamais « -Sy » seul : ça laisserait le système à moitié mis à jour
+pacman -Syu --needed --noconfirm archiso
 
 # ────────────────────────────────────────────────────────────────
 # Calamares (installeur graphique) depuis l'AUR
