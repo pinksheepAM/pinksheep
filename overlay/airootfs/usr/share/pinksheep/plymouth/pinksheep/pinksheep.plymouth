@@ -1,0 +1,8 @@
+[Plymouth Theme]
+Name=PinkSheep
+Description=Écran de chargement PinkSheep : mouton, titre rose et points animés
+ModuleName=script
+
+[script]
+ImageDir=/usr/share/plymouth/themes/pinksheep
+ScriptFile=/usr/share/plymouth/themes/pinksheep/pinksheep.script
