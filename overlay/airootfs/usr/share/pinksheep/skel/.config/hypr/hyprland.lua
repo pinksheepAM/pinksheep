@@ -258,6 +258,7 @@ bind(mainMod .. " + A",         hl.dsp.exec_cmd("pinksheep-ia"),         "Assist
 
 -- Aide & système
 bind(mainMod .. " + H",           hl.dsp.exec_cmd("pinksheep-aide"),          "Afficher cette aide")
+bind(mainMod .. " + I",           hl.dsp.exec_cmd("pinksheep-parametres"),    "Paramètres PinkSheep")
 bind(mainMod .. " + Escape",      hl.dsp.exec_cmd("pinksheep-power"),         "Menu éteindre / redémarrer / veille")
 bind(mainMod .. " + L",           hl.dsp.exec_cmd("loginctl lock-session"),  "Verrouiller l'écran")
 bind(mainMod .. " + N",           hl.dsp.exec_cmd("swaync-client -t -sw"),   "Centre de notifications")
@@ -362,7 +363,7 @@ hl.window_rule({
 })
 hl.window_rule({
     name   = "aide-pinksheep",
-    match  = { class = "^(pinksheep-aide|pinksheep-btop|pinksheep-maj)$" },
+    match  = { class = "^(pinksheep-aide|pinksheep-btop|pinksheep-maj|pinksheep-parametres)$" },
     float  = true,
     center = true,
     size   = "1000 700",

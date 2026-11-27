@@ -73,6 +73,10 @@ output_path = "../Kvantum/PinkSheep/PinkSheep.kvconfig"
 input_path  = "./modeles/kvantum.svg"
 output_path = "../Kvantum/PinkSheep/PinkSheep.svg"
 
+[templates.parametres]
+input_path  = "./modeles/parametres-couleurs.json"
+output_path = "../pinksheep/parametres-couleurs.json"
+
 [templates.qt6ct]
 input_path  = "./modeles/qt6ct.conf"
 output_path = "../qt6ct/colors/pinksheep.conf"

@@ -1,0 +1,209 @@
+#!/usr/bin/env python3
+# ╭──────────────────────────────────────────────────────────────╮
+# │  PinkSheep — Paramètres (prototype)                           │
+# │  Une seule fenêtre qui regroupe les réglages : elle lance les │
+# │  bons outils (son, réseau, écrans…) et les commandes PinkSheep │
+# │  au lieu de réécrire leurs réglages.                          │
+# │                                                              │
+# │  pinksheep-parametres [rubrique]   ex. : pinksheep-parametres son │
+# │  Interface en QML (Qt 6), logique en Python (PySide6).        │
+# │  Couleurs : ~/.config/pinksheep/parametres-couleurs.json,     │
+# │  généré par matugen à chaque changement de fond d'écran.      │
+# │                                                              │
+# │  Sécurité : liste FERMÉE d'actions (aucune commande libre),   │
+# │  les réglages qui demandent sudo s'ouvrent dans un terminal   │
+# │  où le mot de passe est tapé à la main, jamais stocké.        │
+# ╰──────────────────────────────────────────────────────────────╯
+import json
+import os
+import shutil
+import subprocess
+import sys
+import threading
+from pathlib import Path
+
+from PySide6.QtCore import QObject, Property, Signal, Slot, QUrl
+from PySide6.QtGui import QGuiApplication, QIcon
+from PySide6.QtQml import QQmlApplicationEngine
+
+HOME = Path.home()
+CONF = Path(os.environ.get("XDG_CONFIG_HOME", HOME / ".config"))
+COULEURS = CONF / "pinksheep" / "parametres-couleurs.json"
+QML = Path(os.environ.get("PINKSHEEP_PARAMETRES_QML",
+                          "/usr/share/pinksheep/parametres/Parametres.qml"))
+
+# Couleurs de secours (rose PinkSheep) si matugen n'a pas encore tourné
+COULEURS_DEFAUT = {
+    "fond": "#1a1220", "surface": "#251a2c", "surface_haute": "#30233a",
+    "texte": "#f3e4ee", "discret": "#b9a5b5", "primaire": "#ff7eb6",
+    "sur_primaire": "#3d0021", "conteneur": "#5c2342", "contour": "#7d6577",
+}
+
+FERMER = 'echo; read -rp "Entrée pour fermer… " _'
+
+
+def editeur(fichier):
+    """Kate si installé, sinon Neovim dans un terminal."""
+    if shutil.which("kate"):
+        return {"cmd": ["kate", fichier], "outil": "kate"}
+    return {"terminal": f'nvim "{fichier}"', "outil": "nvim"}
+
+
+# Chaque action : soit "cmd" (appli graphique lancée telle quelle),
+# soit "terminal" (commande FIXE ouverte dans pinksheep-terminal).
+# "outil" : programme à vérifier avant de proposer le bouton.
+ACTIONS = {
+    # Apparence
+    "fond_choisir":   {"cmd": ["pinksheep-fond", "--choisir"]},
+    "fond_hasard":    {"cmd": ["pinksheep-fond", "--aleatoire"]},
+    "gtk":            {"cmd": ["nwg-look"]},
+    "qt":             {"cmd": ["qt6ct"]},
+    "style_hyprlust": {"terminal": f"pinksheep-hyprlust; {FERMER}", "outil": "pinksheep-hyprlust"},
+    "style_pinksheep": {"terminal": f"pinksheep-hyprlust --annuler; {FERMER}", "outil": "pinksheep-hyprlust"},
+    # Matériel
+    "son":            {"cmd": ["pavucontrol"]},
+    "reseau":         {"cmd": ["nm-connection-editor"]},
+    "bluetooth":      {"cmd": ["blueman-manager"]},
+    "ecrans":         {"cmd": ["nwg-displays"]},
+    "clavier":        editeur(str(CONF / "hypr" / "perso.lua")),
+    # Fenêtres
+    "boutons_on":     {"terminal": f"pinksheep-boutons; {FERMER}", "outil": "pinksheep-boutons"},
+    "boutons_off":    {"terminal": f"pinksheep-boutons --off; {FERMER}", "outil": "pinksheep-boutons"},
+    # Démarrage (sudo : mot de passe tapé dans le terminal)
+    "chargement_on":  {"terminal": f"sudo pinksheep-chargement; {FERMER}", "outil": "pinksheep-chargement"},
+    "chargement_off": {"terminal": f"sudo pinksheep-chargement --off; {FERMER}", "outil": "pinksheep-chargement"},
+    "grub_theme":     {"terminal": f"sudo pinksheep-grub; {FERMER}", "outil": "pinksheep-grub"},
+    "grub_texte":     {"terminal": f"sudo pinksheep-grub --texte; {FERMER}", "outil": "pinksheep-grub"},
+    # Mises à jour
+    "maj_tout":       {"cmd": ["pinksheep-verif-maj", "--lancer"]},
+    "maj_verifier":   {"terminal": f"pinksheep-maj --verifier; {FERMER}", "outil": "pinksheep-maj"},
+    # Aide
+    "aide":           {"cmd": ["pinksheep-aide"]},
+}
+
+# Commandes d'état (lecture seule, sans sudo)
+ETATS = {
+    "chargement": ["pinksheep-chargement", "--etat"],
+    "grub":       ["pinksheep-grub", "--etat"],
+    "boutons":    ["pinksheep-boutons", "--etat"],
+}
+
+
+def outil(action):
+    spec = ACTIONS[action]
+    return spec.get("outil") or spec["cmd"][0]
+
+
+class Parametres(QObject):
+    couleursChangees = Signal()
+    majTexteChange = Signal()
+
+    def __init__(self):
+        super().__init__()
+        self._couleurs = dict(COULEURS_DEFAUT)
+        self._majTexte = "Pas encore vérifié"
+        self.charger_couleurs()
+
+    # ── Couleurs ───────────────────────────────────────────────
+    def charger_couleurs(self):
+        try:
+            self._couleurs.update(json.loads(COULEURS.read_text()))
+        except (OSError, ValueError):
+            pass
+
+    @Property("QVariantMap", notify=couleursChangees)
+    def couleurs(self):
+        return self._couleurs
+
+    # ── Actions ────────────────────────────────────────────────
+    @Slot(str, result=bool)
+    def disponible(self, action):
+        return action in ACTIONS and shutil.which(outil(action)) is not None
+
+    @Slot(str, result=str)
+    def manquant(self, action):
+        return "" if self.disponible(action) else outil(action)
+
+    @Slot(str)
+    def lancer(self, action):
+        spec = ACTIONS.get(action)
+        if spec is None or not self.disponible(action):
+            return
+        if "cmd" in spec:
+            argv = spec["cmd"]
+        else:
+            argv = ["pinksheep-terminal", "--class", "pinksheep-parametres",
+                    "bash", "-c", spec["terminal"]]
+        subprocess.Popen(argv, start_new_session=True,
+                         stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL,
+                         stderr=subprocess.DEVNULL)
+
+    # ── États ──────────────────────────────────────────────────
+    @Slot(str, result=str)
+    def etat(self, nom):
+        argv = ETATS.get(nom)
+        if argv is None or shutil.which(argv[0]) is None:
+            return "inconnu"
+        try:
+            sortie = subprocess.run(argv, capture_output=True, text=True, timeout=5).stdout
+        except (OSError, subprocess.SubprocessError):
+            return "inconnu"
+        return sortie.strip().splitlines()[-1] if sortie.strip() else "inconnu"
+
+    @Slot(result=str)
+    def version(self):
+        for f in ("/etc/pinksheep/version-pinksheep", "/usr/share/pinksheep/VERSION_PINKSHEEP"):
+            try:
+                return "PinkSheep " + Path(f).read_text().strip()
+            except OSError:
+                continue
+        return "PinkSheep"
+
+    # Vérification des mises à jour en arrière-plan (réseau : peut être lent)
+    @Property(str, notify=majTexteChange)
+    def majTexte(self):
+        return self._majTexte
+
+    @Slot()
+    def verifierMaj(self):
+        if shutil.which("pinksheep-verif-maj") is None:
+            self._majTexte = "Vérificateur introuvable"
+            self.majTexteChange.emit()
+            return
+        self._majTexte = "Vérification…"
+        self.majTexteChange.emit()
+
+        def travail():
+            try:
+                sortie = subprocess.run(["pinksheep-verif-maj"], capture_output=True,
+                                        text=True, timeout=120).stdout
+                tooltip = json.loads(sortie).get("tooltip", "")
+                texte = tooltip.replace("\\n", "\n").strip() or "Tout est à jour"
+            except (OSError, ValueError, subprocess.SubprocessError):
+                texte = "Vérification impossible (internet ?)"
+            self._majTexte = texte
+            self.majTexteChange.emit()
+
+        threading.Thread(target=travail, daemon=True).start()
+
+
+def main():
+    os.environ.setdefault("QT_QUICK_CONTROLS_STYLE", "Basic")
+    app = QGuiApplication(sys.argv)
+    app.setApplicationName("Paramètres PinkSheep")
+    app.setDesktopFileName("pinksheep-parametres")
+    app.setWindowIcon(QIcon.fromTheme("preferences-system"))
+    moteur = QQmlApplicationEngine()
+    p = Parametres()
+    moteur.rootContext().setContextProperty("ps", p)
+    # Rubrique d'ouverture (ex. « son », « mises-a-jour ») : premier argument
+    moteur.rootContext().setContextProperty("rubriqueDemandee", sys.argv[1] if len(sys.argv) > 1 else "")
+    moteur.load(QUrl.fromLocalFile(str(QML)))
+    if not moteur.rootObjects():
+        print(f"Impossible de charger l'interface : {QML}", file=sys.stderr)
+        return 1
+    return app.exec()
+
+
+if __name__ == "__main__":
+    sys.exit(main())

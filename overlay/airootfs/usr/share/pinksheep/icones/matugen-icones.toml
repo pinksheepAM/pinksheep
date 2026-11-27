@@ -1,0 +1,35 @@
+# PinkSheep — icônes : extrait matugen À AJOUTER à ~/.config/matugen/config.toml
+# une fois une direction choisie (remplacer DIRECTION par bonbon, trait-doux ou galet).
+# Rien n'est activé tant que ce n'est pas fait ; puis : gsettings / nwg-look → thème d'icônes « PinkSheep ».
+
+[templates.icone-folder]
+input_path  = "/usr/share/pinksheep/icones/directions/DIRECTION/folder.svg"
+output_path = "~/.local/share/icons/PinkSheep/scalable/places/folder.svg"
+
+[templates.icone-user-home]
+input_path  = "/usr/share/pinksheep/icones/directions/DIRECTION/user-home.svg"
+output_path = "~/.local/share/icons/PinkSheep/scalable/places/user-home.svg"
+
+[templates.icone-folder-pictures]
+input_path  = "/usr/share/pinksheep/icones/directions/DIRECTION/folder-pictures.svg"
+output_path = "~/.local/share/icons/PinkSheep/scalable/places/folder-pictures.svg"
+
+[templates.icone-folder-music]
+input_path  = "/usr/share/pinksheep/icones/directions/DIRECTION/folder-music.svg"
+output_path = "~/.local/share/icons/PinkSheep/scalable/places/folder-music.svg"
+
+[templates.icone-folder-download]
+input_path  = "/usr/share/pinksheep/icones/directions/DIRECTION/folder-download.svg"
+output_path = "~/.local/share/icons/PinkSheep/scalable/places/folder-download.svg"
+
+[templates.icone-folder-documents]
+input_path  = "/usr/share/pinksheep/icones/directions/DIRECTION/folder-documents.svg"
+output_path = "~/.local/share/icons/PinkSheep/scalable/places/folder-documents.svg"
+
+[templates.icone-pinksheep-parametres]
+input_path  = "/usr/share/pinksheep/icones/directions/DIRECTION/pinksheep-parametres.svg"
+output_path = "~/.local/share/icons/PinkSheep/scalable/apps/pinksheep-parametres.svg"
+
+[templates.icone-system-software-update]
+input_path  = "/usr/share/pinksheep/icones/directions/DIRECTION/system-software-update.svg"
+output_path = "~/.local/share/icons/PinkSheep/scalable/apps/system-software-update.svg"

@@ -243,6 +243,11 @@ for s in systemd-networkd.service iwd.service; do
         systemctl disable "$s" && info "$s désactivé (remplacé par NetworkManager)"
     fi
 done
+# Applis PinkSheep dans le lanceur (Paramètres…)
+for f in "$PINKSHEEP_DIR"/applications/*.desktop; do
+    [[ -f "$f" ]] && install -Dm644 "$f" "/usr/share/applications/$(basename "$f")"
+done
+
 # Session de secours (rendu logiciel) sur l'écran de connexion
 install -Dm644 "$PINKSHEEP_DIR/sessions/pinksheep-secours.desktop" \
     /usr/share/wayland-sessions/pinksheep-secours.desktop

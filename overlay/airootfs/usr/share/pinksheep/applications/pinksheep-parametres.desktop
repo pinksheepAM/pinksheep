@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=Paramètres PinkSheep
+GenericName=Paramètres
+Comment=Fond d'écran, son, réseau, Bluetooth, écrans, démarrage, mises à jour
+Exec=pinksheep-parametres
+Icon=preferences-system
+Terminal=false
+Categories=Settings;System;
+Keywords=réglages;paramètres;settings;fond;son;wifi;bluetooth;écran;
+StartupWMClass=pinksheep-parametres
