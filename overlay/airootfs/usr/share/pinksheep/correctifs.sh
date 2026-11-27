@@ -94,3 +94,24 @@ if [[ ! -e "$pol" ]]; then
     echo "   -> Firefox prend les couleurs de ton fond d'écran (au prochain démarrage de Firefox)"
 fi
 
+
+# 2026-11 (installeur-securite) : système en btrfs → instantanés Timeshift dans le menu de
+# démarrage (grub-btrfs). Sur ext4 (installations d'avant), rien.
+if [[ "$(findmnt -no FSTYPE / 2>/dev/null)" == btrfs && -f /etc/default/grub ]] \
+   && [[ ! -f /etc/systemd/system/grub-btrfsd.service.d/pinksheep-timeshift.conf ]]; then
+    if /usr/local/bin/pinksheep-btrfs >/dev/null 2>&1; then
+        echo "   -> Instantanés Timeshift disponibles dans le menu de démarrage"
+    else
+        echo "   -> Instantanés dans le menu de démarrage non activés (sudo pinksheep-btrfs pour réessayer)"
+    fi
+fi
+
+# 2026-11 (installeur-securite) : dépôt pacman PinkSheep signé (paru, Caelestia…), dès que
+# sa clé publique est publiée. Avant ça : rien.
+if /usr/local/bin/pinksheep-depot --etat 2>/dev/null | grep -q "prêt mais pas activé"; then
+    if /usr/local/bin/pinksheep-depot >/dev/null 2>&1; then
+        echo "   -> Dépôt PinkSheep activé (paquets signés) ; paru installé s'il y est"
+    else
+        echo "   -> Dépôt PinkSheep non activé (sudo pinksheep-depot pour voir pourquoi)"
+    fi
+fi

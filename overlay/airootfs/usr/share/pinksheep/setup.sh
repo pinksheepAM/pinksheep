@@ -276,6 +276,11 @@ if command -v flatpak >/dev/null; then
         alerte "Flathub n'a pas pu être ajouté (sans internet ?) : pinksheep-maj le refera."
 fi
 
+# Dépôt pacman PinkSheep (paquets signés : paru, Caelestia…) : activé seulement
+# quand sa clé publique existe ; sinon rien ne change
+PINKSHEEP_INSTALLATION=1 /usr/local/bin/pinksheep-depot \
+    || alerte "dépôt PinkSheep non activé : pinksheep-maj le refera"
+
 # Affichage à l'écran de Verr. Maj / Verr. Num (SwayOSD écoute le clavier)
 if [[ -f /usr/lib/systemd/system/swayosd-libinput-backend.service ]]; then
     systemctl enable swayosd-libinput-backend.service
@@ -311,6 +316,10 @@ if [[ -f /etc/default/grub ]]; then
     # Thème PinkSheep (pour revenir au menu texte : sudo pinksheep-grub --texte)
     if [[ ! -f /etc/pinksheep/grub-texte ]]; then
         /usr/local/bin/pinksheep-grub --theme --sans-mkconfig || alerte "thème GRUB non appliqué (menu texte gardé)"
+    fi
+    # Système en btrfs (choix par défaut) : les instantanés Timeshift dans le menu
+    if [[ "$(findmnt -no FSTYPE / 2>/dev/null)" == btrfs ]]; then
+        /usr/local/bin/pinksheep-btrfs --sans-mkconfig || alerte "instantanés dans le menu de démarrage non activés"
     fi
     grub-mkconfig -o /boot/grub/grub.cfg || alerte "grub-mkconfig a échoué"
     info "GRUB configuré (Windows apparaîtra dans le menu s'il est détecté)"

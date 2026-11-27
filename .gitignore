@@ -3,3 +3,4 @@ _construction/
 iso/
 *.iso
 *.sha256
+_depot/

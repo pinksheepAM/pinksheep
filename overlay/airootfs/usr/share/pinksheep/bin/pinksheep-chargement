@@ -70,7 +70,9 @@ fi
 options_noyau() {
     local action="$1" ligne valeur o
     ligne="$(grep -E '^GRUB_CMDLINE_LINUX_DEFAULT=' "$DEFAUT" | tail -n1)"
-    valeur="${ligne#GRUB_CMDLINE_LINUX_DEFAULT=}"; valeur="${valeur#\"}"; valeur="${valeur%\"}"
+    valeur="${ligne#GRUB_CMDLINE_LINUX_DEFAULT=}"
+    # Guillemets doubles (Arch) ou simples (écrits par Calamares, ex. disque chiffré)
+    valeur="${valeur#[\"\']}"; valeur="${valeur%[\"\']}"
     for o in "${OPTIONS[@]}"; do
         if [[ $action == ajouter ]]; then
             [[ " $valeur " == *" $o "* ]] || valeur="$valeur $o"
