@@ -50,3 +50,5 @@ if grep -q '@MUSIQUE@' "$HOME/.config/mpd/mpd.conf" 2>/dev/null; then
 fi
 
 style_qt
+# Firefox aux couleurs du fond (seulement les profils sans userChrome.css à eux)
+command -v pinksheep-firefox >/dev/null && pinksheep-firefox

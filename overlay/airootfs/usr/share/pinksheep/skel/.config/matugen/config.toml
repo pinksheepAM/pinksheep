@@ -59,6 +59,11 @@ output_path = "../gtk-3.0/gtk.css"
 input_path  = "./modeles/gtk.css"
 output_path = "../gtk-4.0/gtk.css"
 
+# Firefox (thème « Système ») : lié dans chaque profil par pinksheep-firefox
+[templates.firefox]
+input_path  = "./modeles/firefox.css"
+output_path = "../pinksheep/firefox/userChrome.css"
+
 # Thème Kvantum « PinkSheep » (style de toutes les applis Qt 5 et Qt 6)
 [templates.kvantum]
 input_path  = "./modeles/kvantum.kvconfig"

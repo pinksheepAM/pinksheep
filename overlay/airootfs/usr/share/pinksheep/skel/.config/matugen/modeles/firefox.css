@@ -1,0 +1,26 @@
+/* PinkSheep — couleurs de Firefox, générées depuis le fond d'écran (matugen).
+   Ne s'applique qu'avec le thème « Système » de Firefox : si tu choisis un
+   autre thème Firefox, il garde ses couleurs. */
+:root:not([lwtheme]) {
+    --toolbox-bgcolor: {{colors.surface_container.default.hex}} !important;
+    --toolbox-bgcolor-inactive: {{colors.surface.default.hex}} !important;
+    --toolbox-textcolor: {{colors.on_surface.default.hex}} !important;
+    --toolbar-bgcolor: {{colors.surface_container_high.default.hex}} !important;
+    --toolbar-color: {{colors.on_surface.default.hex}} !important;
+    --tab-selected-bgcolor: {{colors.surface_container_high.default.hex}} !important;
+    --tab-selected-textcolor: {{colors.on_surface.default.hex}} !important;
+    --toolbar-field-background-color: {{colors.surface_container_low.default.hex}} !important;
+    --toolbar-field-focus-background-color: {{colors.surface_container_lowest.default.hex}} !important;
+    --toolbar-field-color: {{colors.on_surface.default.hex}} !important;
+    --toolbar-field-focus-color: {{colors.on_surface.default.hex}} !important;
+    --urlbar-box-bgcolor: {{colors.surface_container_low.default.hex}} !important;
+    --arrowpanel-background: {{colors.surface_container_high.default.hex}} !important;
+    --arrowpanel-color: {{colors.on_surface.default.hex}} !important;
+    --sidebar-background-color: {{colors.surface_container_low.default.hex}} !important;
+    --sidebar-text-color: {{colors.on_surface.default.hex}} !important;
+    --focus-outline-color: {{colors.primary.default.hex}} !important;
+    --toolbarbutton-icon-fill-attention: {{colors.primary.default.hex}} !important;
+    --button-primary-bgcolor: {{colors.primary.default.hex}} !important;
+    --button-primary-color: {{colors.on_primary.default.hex}} !important;
+    --tab-loading-fill: {{colors.primary.default.hex}} !important;
+}

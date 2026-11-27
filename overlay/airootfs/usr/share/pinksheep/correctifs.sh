@@ -85,3 +85,12 @@ if command -v flatpak >/dev/null && [[ ! -f /etc/pinksheep/heroic-installe ]]; t
         echo "   -> Heroic n'a pas pu être installé (connexion ?) : ce sera retenté à la prochaine mise à jour"
     fi
 fi
+
+# 2026-11 : Firefox aux couleurs du fond (autorise userChrome.css). On n'écrase
+# pas un policies.json qui ne vient pas de PinkSheep.
+pol=/etc/firefox/policies/policies.json
+if [[ ! -e "$pol" ]]; then
+    install -Dm644 /usr/share/pinksheep/systeme/firefox/policies.json "$pol"
+    echo "   -> Firefox prend les couleurs de ton fond d'écran (au prochain démarrage de Firefox)"
+fi
+

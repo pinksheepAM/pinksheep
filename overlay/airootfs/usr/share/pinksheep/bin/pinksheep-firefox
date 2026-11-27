@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+# PinkSheep — Firefox aux couleurs du fond d'écran.
+# Relie ~/.config/pinksheep/firefox/userChrome.css (généré par matugen) dans
+# chaque profil Firefox, SEULEMENT si le profil n'a pas déjà son propre
+# userChrome.css : on n'écrase jamais tes réglages. Lancé à chaque connexion.
+# (Firefox ≥ 145 ignore gtk.css avec adw-gtk3 : d'où ce petit fichier.)
+set -uo pipefail
+SOURCE="$HOME/.config/pinksheep/firefox/userChrome.css"
+INI="$HOME/.mozilla/firefox/profiles.ini"
+[[ -f "$SOURCE" && -f "$INI" ]] || exit 0
+
+while IFS= read -r chemin; do
+    [[ -n "$chemin" ]] || continue
+    [[ "$chemin" == /* ]] || chemin="$HOME/.mozilla/firefox/$chemin"
+    [[ -d "$chemin" ]] || continue
+    cible="$chemin/chrome/userChrome.css"
+    if [[ -L "$cible" && "$(readlink "$cible")" == "$SOURCE" ]]; then
+        continue                                  # déjà relié
+    elif [[ -e "$cible" || -L "$cible" ]]; then
+        continue                                  # fichier à toi : on n'y touche pas
+    fi
+    mkdir -p "$chemin/chrome" && ln -s "$SOURCE" "$cible"
+done < <(sed -n 's/^Path=//p' "$INI")
+exit 0

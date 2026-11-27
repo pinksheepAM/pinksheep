@@ -267,6 +267,9 @@ if command -v ufw >/dev/null; then
     systemctl enable ufw.service
 fi
 
+# Firefox : autorise le petit fichier de couleurs PinkSheep (userChrome.css)
+install -Dm644 "$PINKSHEEP_DIR/systeme/firefox/policies.json" /etc/firefox/policies/policies.json
+
 # Boutique d'applis (Discover) : le catalogue Flathub
 if command -v flatpak >/dev/null; then
     flatpak remote-add --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo || \
