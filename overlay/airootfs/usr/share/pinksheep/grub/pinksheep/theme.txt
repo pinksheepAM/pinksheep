@@ -6,12 +6,15 @@ title-text: ""
 desktop-image: "fond.png"
 desktop-image-scale-method: "crop"
 desktop-color: "#1a1220"
-terminal-font: "Noto Sans Regular 16"
-terminal-left: "10%"
-terminal-top: "10%"
-terminal-width: "80%"
-terminal-height: "80%"
-terminal-border: "0"
+terminal-font: "Noto Sans Mono Regular 14"
+# Messages de démarrage (« Chargement de Linux… ») : dans une carte, à la place du menu
+terminal-left: "50%-350"
+terminal-top: "9%+240"
+# GRUB impose au moins 80 colonnes × 24 lignes : sinon il agrandit et recentre
+terminal-width: "700"
+terminal-height: "540"
+terminal-border: "24"
+terminal-box: "menu_*.png"
 
 + image {
     left = 50%-75
