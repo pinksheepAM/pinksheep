@@ -69,12 +69,19 @@ SUR_PRIMAIRE = {("PanelButtonCommand", "text.toggle.color"), ("ItemView", "text.
                 ("MenuBarItem", "text.focus.color"), ("Progressbar", "text.focus.color"),
                 ("Progressbar", "text.press.color"), ("Progressbar", "text.toggle.color")}
 
+# Clés ajoutées à KvArcDark (absentes de l'original) : texte lisible sur les
+# boutons-outils enfoncés, qui sont de la couleur principale
+AJOUTS = {"PanelButtonTool": ["text.toggle.color=#" + role("on_primary")]}
+
 def kvconfig(source):
     sortie, section = [], ""
     for ligne in source.splitlines():
         m = re.match(r"^\[(.+)\]$", ligne)
         if m:
             section = m.group(1)
+            sortie.append(ligne)
+            sortie.extend(AJOUTS.get(section, []))
+            continue
         cle, egal, valeur = ligne.partition("=")
         if egal and cle.endswith("color"):
             if section == "GeneralColors" and cle in GENERALES:
