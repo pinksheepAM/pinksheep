@@ -59,6 +59,15 @@ output_path = "../gtk-3.0/gtk.css"
 input_path  = "./modeles/gtk.css"
 output_path = "../gtk-4.0/gtk.css"
 
+# Thème Kvantum « PinkSheep » (style de toutes les applis Qt 5 et Qt 6)
+[templates.kvantum]
+input_path  = "./modeles/kvantum.kvconfig"
+output_path = "../Kvantum/PinkSheep/PinkSheep.kvconfig"
+
+[templates.kvantum-svg]
+input_path  = "./modeles/kvantum.svg"
+output_path = "../Kvantum/PinkSheep/PinkSheep.svg"
+
 [templates.qt6ct]
 input_path  = "./modeles/qt6ct.conf"
 output_path = "../qt6ct/colors/pinksheep.conf"

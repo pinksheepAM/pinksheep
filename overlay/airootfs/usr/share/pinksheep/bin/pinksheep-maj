@@ -46,6 +46,7 @@ GENERES=(
     kitty/couleurs.conf foot/couleurs.ini gtk-3.0/gtk.css gtk-4.0/gtk.css
     qt6ct/colors/pinksheep.conf qt6ct/qt6ct.conf btop/themes/pinksheep.theme
     cava/config nvim/lua/couleurs.lua yazi/theme.toml mpd/mpd.conf
+    Kvantum/PinkSheep/PinkSheep.kvconfig Kvantum/PinkSheep/PinkSheep.svg
 )
 # Dossiers remplacés par le style Hyprlust : on n'y touche pas quand il est actif
 HYPRLUST=(waybar rofi swaync wlogout kitty fastfetch rmpc yazi btop zathura nvim mpv newsboat swappy
